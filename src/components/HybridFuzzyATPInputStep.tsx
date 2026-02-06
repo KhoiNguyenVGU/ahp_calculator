@@ -113,9 +113,9 @@ export default function HybridFuzzyATPInputStep({
   };
 
   const canProceed =
-    goal.trim() !== '' &&
-    criteria.every((c) => c.trim() !== '') &&
-    alternatives.every((a) => a.trim() !== '') &&
+    String(goal || '').trim() !== '' &&
+    criteria.every((c) => String(c || '').trim() !== '') &&
+    alternatives.every((a) => String(a || '').trim() !== '') &&
     criteria.length >= 2 &&
     alternatives.length >= 2;
 

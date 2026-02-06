@@ -76,11 +76,11 @@ export default function TOPSISInputStep({
   };
 
   const canProceed =
-    criteria.every((c) => c.trim() !== '') &&
-    alternatives.every((a) => a.trim() !== '') &&
+    criteria.every((c) => String(c || '').trim() !== '') &&
+    alternatives.every((a) => String(a || '').trim() !== '') &&
     criteria.length >= 2 &&
     alternatives.length >= 2 &&
-    dataMatrix.every(row => row.every(cell => cell.trim() !== '' && !isNaN(parseFloat(cell))));
+    dataMatrix.every(row => row.every(cell => String(cell || '').trim() !== '' && !isNaN(parseFloat(String(cell || '0')))));
 
   return (
     <div className="card max-w-5xl mx-auto">

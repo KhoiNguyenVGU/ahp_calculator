@@ -102,11 +102,11 @@ export default function FuzzyTOPSISInputStep({
   };
 
   const canProceed =
-    criteria.every((c) => c.trim() !== '') &&
-    alternatives.every((a) => a.trim() !== '') &&
+    criteria.every((c) => String(c || '').trim() !== '') &&
+    alternatives.every((a) => String(a || '').trim() !== '') &&
     criteria.length >= 2 &&
     alternatives.length >= 2 &&
-    dataMatrix.every(row => row.every(cell => cell.trim() !== '' && !isNaN(parseFloat(cell)))) &&
+    dataMatrix.every(row => row.every(cell => String(cell || '').trim() !== '' && !isNaN(parseFloat(String(cell || '0'))))) &&
     fuzzyWeights.every(w => w.l <= w.m && w.m <= w.u);
 
   return (

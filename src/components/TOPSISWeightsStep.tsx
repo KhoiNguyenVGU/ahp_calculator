@@ -28,9 +28,9 @@ export default function TOPSISWeightsStep({
     setWeights(criteria.map(() => equalWeight));
   };
 
-  const totalWeight = weights.reduce((sum, w) => sum + (parseFloat(w) || 0), 0);
+  const totalWeight = weights.reduce((sum, w) => sum + (parseFloat(String(w)) || 0), 0);
   const isValidTotal = Math.abs(totalWeight - 1) < 0.01;
-  const allWeightsValid = weights.every(w => w.trim() !== '' && !isNaN(parseFloat(w)) && parseFloat(w) >= 0);
+  const allWeightsValid = weights.every(w => String(w || '').trim() !== '' && !isNaN(parseFloat(String(w))) && parseFloat(String(w)) >= 0);
 
   const canProceed = allWeightsValid && isValidTotal;
 

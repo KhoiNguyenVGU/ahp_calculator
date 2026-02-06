@@ -238,7 +238,7 @@ export default function DatasetLoader({ onDataLoaded, onMappingComplete }: Datas
     const alternatives = Array.from(candidateSet).filter(Boolean) as string[];
     
     // Limit alternatives for performance
-    const maxAlternatives = 50;
+    const maxAlternatives = 30000;
     if (alternatives.length > maxAlternatives) {
       console.warn(`Too many alternatives (${alternatives.length}). Using first ${maxAlternatives} for performance.`);
       alternatives.splice(maxAlternatives);

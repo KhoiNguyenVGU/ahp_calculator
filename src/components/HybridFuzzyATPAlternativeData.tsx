@@ -23,7 +23,7 @@ export default function HybridFuzzyATPAlternativeData({
   onBack,
 }: HybridFuzzyATPAlternativeDataProps) {
   const isComplete = dataMatrix.every(row =>
-    row.every(cell => cell.trim() !== '' && !isNaN(parseFloat(cell)))
+    row.every(cell => String(cell || '').trim() !== '' && !isNaN(parseFloat(String(cell || '0'))))
   );
 
   // Function to load prefilled data from dataset

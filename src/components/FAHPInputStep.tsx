@@ -53,9 +53,9 @@ export default function FAHPInputStep({
     setAlternatives(newAlternatives);
   };
 
-  const canProceed = goal.trim() !== '' && 
-    criteria.every(c => c.trim() !== '') && 
-    alternatives.every(a => a.trim() !== '');
+  const canProceed = String(goal || '').trim() !== '' && 
+    criteria.every(c => String(c || '').trim() !== '') && 
+    alternatives.every(a => String(a || '').trim() !== '');
 
   return (
     <div className="space-y-8">

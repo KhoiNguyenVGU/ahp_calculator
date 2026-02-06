@@ -54,9 +54,9 @@ export default function InputStep({
   };
 
   const canProceed =
-    goalName.trim() !== '' &&
-    criteria.every((c) => c.trim() !== '') &&
-    alternatives.every((a) => a.trim() !== '') &&
+    String(goalName || '').trim() !== '' &&
+    criteria.every((c) => String(c || '').trim() !== '') &&
+    alternatives.every((a) => String(a || '').trim() !== '') &&
     criteria.length >= 2 &&
     alternatives.length >= 2;
 
