@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { fahpSaatyScale } from '@/utils/fahp';
 
 interface HybridFuzzyATPCriteriaComparisonProps {
@@ -19,6 +19,16 @@ export default function HybridFuzzyATPCriteriaComparison({
   onBack,
 }: HybridFuzzyATPCriteriaComparisonProps) {
   const n = criteria.length;
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleNext = () => {
+    setIsProcessing(true);
+    // Use setTimeout to allow UI to update before heavy processing
+    setTimeout(() => {
+      onNext();
+      setIsProcessing(false);
+    }, 100);
+  };
 
   const handleValueChange = (i: number, j: number, value: string) => {
     const newMatrix = criteriaMatrix.map(row => [...row]);
@@ -148,17 +158,29 @@ export default function HybridFuzzyATPCriteriaComparison({
 
       {/* Action Buttons */}
       <div className="flex justify-between gap-4">
-        <button onClick={onBack} className="btn-secondary">
+        <button onClick={onBack} className="btn-secondary" disabled={isProcessing}>
           ← Back
         </button>
         <button
-          onClick={onNext}
-          disabled={!isComplete}
-          className={`btn-primary ${!isComplete && 'opacity-50 cursor-not-allowed'}`}
+          onClick={handleNext}
+          disabled={!isComplete || isProcessing}
+          className={`btn-primary ${(!isComplete || isProcessing) && 'opacity-50 cursor-not-allowed'}`}
         >
-          Enter Alternative Data →
+          {isProcessing ? 'Processing...' : 'Enter Alternative Data →'}
         </button>
       </div>
+
+      {/* Progress Bar */}
+      {isProcessing && (
+        <div className="mt-4">
+          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+            <div className="bg-blue-600 h-2.5 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+          </div>
+          <p className="text-sm text-gray-600 text-center mt-2">
+            Processing large dataset, please wait...
+          </p>
+        </div>
+      )}
     </div>
   );
 }

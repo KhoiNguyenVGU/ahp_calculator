@@ -17,6 +17,7 @@ export default function QuickScoringInput({
 }: QuickScoringInputProps) {
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
+  const [showAllRows, setShowAllRows] = useState(false);
 
   // Quick scoring presets
   const scoringPresets = [
@@ -141,62 +142,85 @@ export default function QuickScoringInput({
             </tr>
           </thead>
           <tbody>
-            {alternatives.map((alt, rowIdx) => (
-              <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="border border-gray-300 px-4 py-3 font-semibold text-gray-800 sticky left-0 bg-inherit z-10">
-                  {alt}
-                </td>
-                {criteria.map((_, colIdx) => {
-                  const cellKey = cellId(rowIdx, colIdx);
-                  const isSelected = selectedCell === cellKey;
+            {alternatives.slice(0, showAllRows ? alternatives.length : 15).map((alt, displayIdx) => {
+              const rowIdx = displayIdx; // displayIdx is the actual row index in the sliced array
+              return (
+                <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="border border-gray-300 px-4 py-3 font-semibold text-gray-800 sticky left-0 bg-inherit z-10">
+                    {alt}
+                  </td>
+                  {criteria.map((_, colIdx) => {
+                    const cellKey = cellId(rowIdx, colIdx);
+                    const isSelected = selectedCell === cellKey;
 
-                  return (
-                    <td
-                      key={colIdx}
-                      className="border border-gray-300 p-1 text-center relative"
-                    >
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={dataMatrix[rowIdx][colIdx]}
-                        onChange={e =>
-                          updateScore(rowIdx, colIdx, e.target.value)
-                        }
-                        onFocus={() => setSelectedCell(cellKey)}
-                        className={`w-full px-2 py-1 text-center border rounded transition-all ${
-                          isSelected
-                            ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50'
-                            : 'border-gray-300'
-                        }`}
-                        placeholder="1-10"
-                      />
+                    return (
+                      <td
+                        key={colIdx}
+                        className="border border-gray-300 p-1 text-center relative"
+                      >
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={dataMatrix[rowIdx][colIdx]}
+                          onChange={e =>
+                            updateScore(rowIdx, colIdx, e.target.value)
+                          }
+                          onFocus={() => setSelectedCell(cellKey)}
+                          className={`w-full px-2 py-1 text-center border rounded transition-all ${
+                            isSelected
+                              ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50'
+                              : 'border-gray-300'
+                          }`}
+                          placeholder="1-10"
+                        />
 
-                      {/* Quick preset buttons appear on focus */}
-                      {isSelected && (
-                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-300 rounded shadow-lg z-20 p-2 grid grid-cols-2 gap-1 min-w-max">
-                          {scoringPresets.map(preset => (
-                            <button
-                              key={preset.value}
-                              onClick={() =>
-                                updateScore(rowIdx, colIdx, preset.value)
-                              }
-                              title={preset.describe}
-                              className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors"
-                            >
-                              {preset.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+                        {/* Quick preset buttons appear on focus */}
+                        {isSelected && (
+                          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-300 rounded shadow-lg z-20 p-2 grid grid-cols-2 gap-1 min-w-max">
+                            {scoringPresets.map(preset => (
+                              <button
+                                key={preset.value}
+                                onClick={() =>
+                                  updateScore(rowIdx, colIdx, preset.value)
+                                }
+                                title={preset.describe}
+                                className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors"
+                              >
+                                {preset.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/* Expand/Collapse Button for large datasets */}
+      {alternatives.length > 15 && (
+        <div className="text-center">
+          <button
+            onClick={() => setShowAllRows(!showAllRows)}
+            className="px-6 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium border border-blue-200"
+          >
+            {showAllRows ? (
+              <>
+                ▲ Show Less (hiding {alternatives.length - 15} candidates)
+              </>
+            ) : (
+              <>
+                ▼ Show All Candidates ({alternatives.length - 15} more)
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Scoring Guide */}
       <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">

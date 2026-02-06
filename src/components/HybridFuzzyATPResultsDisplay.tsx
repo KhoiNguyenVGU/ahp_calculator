@@ -25,6 +25,7 @@ export default function HybridFuzzyATPResultsDisplay({
 }: HybridFuzzyATPResultsDisplayProps) {
   const [expandedSection, setExpandedSection] = useState<string>('summary');
   const [viewMode, setViewMode] = useState<'ranking' | 'comparison'>('ranking');
+  const [showAllCandidates, setShowAllCandidates] = useState(false);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? '' : section);
@@ -60,6 +61,10 @@ export default function HybridFuzzyATPResultsDisplay({
       distanceWorst: result.fuzzyTOPSISResult.crispDistanceFromWorst[index],
     }))
     .sort((a, b) => a.rank - b.rank);
+
+  const displayedAlternatives = showAllCandidates 
+    ? sortedAlternatives 
+    : sortedAlternatives.slice(0, 15);
 
   return (
     <div className="card max-w-6xl mx-auto">
@@ -104,7 +109,7 @@ export default function HybridFuzzyATPResultsDisplay({
           <div className="bg-gradient-to-r from-purple-50 via-cyan-50 to-blue-50 border-2 border-purple-300 rounded-lg p-6 mb-6">
             <h3 className="text-lg font-bold text-gray-800 mb-4">🏆 Final Rankings</h3>
             <div className="space-y-3">
-              {sortedAlternatives.map((alt, index) => (
+              {displayedAlternatives.map((alt, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border-l-4 border-purple-500"
@@ -134,6 +139,18 @@ export default function HybridFuzzyATPResultsDisplay({
                 </div>
               ))}
             </div>
+            
+            {/* Show More/Less Button */}
+            {sortedAlternatives.length > 15 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setShowAllCandidates(!showAllCandidates)}
+                  className="px-6 py-2 bg-white hover:bg-purple-50 border-2 border-purple-300 text-purple-700 font-semibold rounded-lg transition-colors"
+                >
+                  {showAllCandidates ? '▲' : '▼'} {showAllCandidates ? 'Show Top 15 Only' : `Show All Candidates (${sortedAlternatives.length - 15} more)`}
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}

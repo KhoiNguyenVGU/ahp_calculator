@@ -34,6 +34,7 @@ export default function HybridFuzzyATPInputStep({
   const [inputMode, setInputMode] = useState<'manual' | 'example' | 'dataset'>('manual');
   const [csvData, setCsvData] = useState<any[]>([]);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [showAllCandidates, setShowAllCandidates] = useState(false);
 
   // Example data for interviews
   const loadExampleData = () => {
@@ -295,26 +296,49 @@ export default function HybridFuzzyATPInputStep({
         </div>
 
         <div className="space-y-2">
-          {alternatives.map((alt, index) => (
-            <div key={index} className="flex gap-2">
-              <input
-                type="text"
-                value={alt}
-                onChange={(e) => updateAlternative(index, e.target.value)}
-                placeholder={`Candidate ${index + 1}`}
-                className="input flex-1"
-              />
-              {alternatives.length > 2 && (
-                <button
-                  onClick={() => removeAlternative(index)}
-                  className="btn-danger"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          ))}
+          {alternatives.slice(0, showAllCandidates ? alternatives.length : 15).map((alt, displayIndex) => {
+            const actualIndex = displayIndex; // displayIndex is correct since we're slicing the array
+            return (
+              <div key={actualIndex} className="flex gap-2">
+                <input
+                  type="text"
+                  value={alt}
+                  onChange={(e) => updateAlternative(actualIndex, e.target.value)}
+                  placeholder={`Candidate ${actualIndex + 1}`}
+                  className="input flex-1"
+                />
+                {alternatives.length > 2 && (
+                  <button
+                    onClick={() => removeAlternative(actualIndex)}
+                    className="btn-danger"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
+
+        {/* Expand/Collapse Button */}
+        {alternatives.length > 15 && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowAllCandidates(!showAllCandidates)}
+              className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-200"
+            >
+              {showAllCandidates ? (
+                <>
+                  ▲ Show Less (hiding {alternatives.length - 15} candidates)
+                </>
+              ) : (
+                <>
+                  ▼ Show All Candidates ({alternatives.length - 15} more)
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Workflow Overview */}

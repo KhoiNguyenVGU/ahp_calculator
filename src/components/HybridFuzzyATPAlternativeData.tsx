@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import QuickScoringInput from '@/components/QuickScoringInput';
 
 interface HybridFuzzyATPAlternativeDataProps {
@@ -22,9 +22,20 @@ export default function HybridFuzzyATPAlternativeData({
   onNext,
   onBack,
 }: HybridFuzzyATPAlternativeDataProps) {
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const isComplete = dataMatrix.every(row =>
     row.every(cell => String(cell || '').trim() !== '' && !isNaN(parseFloat(String(cell || '0'))))
   );
+
+  const handleNext = () => {
+    setIsProcessing(true);
+    // Use setTimeout to allow UI to update before heavy processing
+    setTimeout(() => {
+      onNext();
+      setIsProcessing(false);
+    }, 100);
+  };
 
   // Function to load prefilled data from dataset
   const loadPrefilledData = () => {
@@ -91,18 +102,31 @@ export default function HybridFuzzyATPAlternativeData({
       <div className="flex justify-between gap-4 mt-8">
         <button
           onClick={onBack}
+          disabled={isProcessing}
           className="btn-secondary"
         >
           ← Back: Review Criteria
         </button>
         <button
-          onClick={onNext}
-          disabled={!isComplete}
-          className={`btn-primary ${!isComplete && 'opacity-50 cursor-not-allowed'}`}
+          onClick={handleNext}
+          disabled={!isComplete || isProcessing}
+          className={`btn-primary ${(!isComplete || isProcessing) && 'opacity-50 cursor-not-allowed'}`}
         >
-          Calculate Results →
+          {isProcessing ? 'Processing...' : 'Calculate Results →'}
         </button>
       </div>
+
+      {/* Progress Bar */}
+      {isProcessing && (
+        <div className="mt-4">
+          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+            <div className="bg-blue-600 h-2.5 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+          </div>
+          <p className="text-sm text-gray-600 text-center mt-2">
+            Calculating results for {alternatives.length} candidates, please wait...
+          </p>
+        </div>
+      )}
     </div>
   );
 }
