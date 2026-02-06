@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { HybridFuzzyATPTopsisResult } from '@/utils/hybridFuzzyATPTopsis';
 import { TFN, formatTFN } from '@/utils/fahp';
+import { exportToCSV, exportToJSON, downloadFile, generateHTMLReport } from '@/utils/exportResults';
+import CandidateComparison from '@/components/CandidateComparison';
 
 interface HybridFuzzyATPResultsDisplayProps {
   result: HybridFuzzyATPTopsisResult;
@@ -22,9 +24,31 @@ export default function HybridFuzzyATPResultsDisplay({
   onReset,
 }: HybridFuzzyATPResultsDisplayProps) {
   const [expandedSection, setExpandedSection] = useState<string>('summary');
+  const [viewMode, setViewMode] = useState<'ranking' | 'comparison'>('ranking');
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? '' : section);
+  };
+
+  const handleExportCSV = () => {
+    const csv = exportToCSV(result, goal, criteria, alternatives);
+    downloadFile(csv, `interview-evaluation-${new Date().getTime()}.csv`, 'csv');
+  };
+
+  const handleExportJSON = () => {
+    const json = exportToJSON(result, goal, criteria, alternatives);
+    downloadFile(json, `interview-evaluation-${new Date().getTime()}.json`, 'json');
+  };
+
+  const handleExportHTML = () => {
+    const html = generateHTMLReport(result, goal, criteria, alternatives);
+    const element = document.createElement('a');
+    const file = new Blob([html], { type: 'text/html;charset=utf-8' });
+    element.href = URL.createObjectURL(file);
+    element.download = `interview-evaluation-${new Date().getTime()}.html`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   const sortedAlternatives = alternatives
@@ -49,41 +73,77 @@ export default function HybridFuzzyATPResultsDisplay({
         Combined Fuzzy AHP criterion weights with Fuzzy TOPSIS alternative ranking
       </p>
 
-      {/* Final Rankings */}
-      <div className="bg-gradient-to-r from-purple-50 via-cyan-50 to-blue-50 border-2 border-purple-300 rounded-lg p-6 mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">🏆 Final Rankings</h3>
-        <div className="space-y-3">
-          {sortedAlternatives.map((alt, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border-l-4 border-purple-500"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-white text-lg ${
-                    index === 0
-                      ? 'bg-yellow-500'
-                      : index === 1
-                        ? 'bg-gray-400'
-                        : index === 2
-                          ? 'bg-orange-400'
-                          : 'bg-blue-500'
-                  }`}
-                >
-                  {alt.rank}
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-lg">{alt.name}</p>
-                  <p className="text-xs text-gray-500">Closeness Coefficient</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold text-purple-600">{alt.score.toFixed(4)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* View Mode Selector */}
+      <div className="flex gap-2 mb-6 p-3 bg-gray-100 rounded-lg">
+        <button
+          onClick={() => setViewMode('ranking')}
+          className={`flex-1 py-2 px-4 rounded font-semibold transition-all ${
+            viewMode === 'ranking'
+              ? 'bg-purple-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          🏆 Rankings
+        </button>
+        <button
+          onClick={() => setViewMode('comparison')}
+          className={`flex-1 py-2 px-4 rounded font-semibold transition-all ${
+            viewMode === 'comparison'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          📊 Comparison View
+        </button>
       </div>
+
+      {/* Rankings View */}
+      {viewMode === 'ranking' && (
+        <>
+          {/* Final Rankings */}
+          <div className="bg-gradient-to-r from-purple-50 via-cyan-50 to-blue-50 border-2 border-purple-300 rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">🏆 Final Rankings</h3>
+            <div className="space-y-3">
+              {sortedAlternatives.map((alt, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border-l-4 border-purple-500"
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-white text-lg ${
+                        index === 0
+                          ? 'bg-yellow-500'
+                          : index === 1
+                            ? 'bg-gray-400'
+                            : index === 2
+                              ? 'bg-orange-400'
+                              : 'bg-blue-500'
+                      }`}
+                    >
+                      {alt.rank}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-lg">{alt.name}</p>
+                      <p className="text-xs text-gray-500">Closeness Coefficient</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-purple-600">{alt.score.toFixed(4)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Comparison View */}
+      {viewMode === 'comparison' && (
+        <div className="mb-6">
+          <CandidateComparison result={result} criteria={criteria} alternatives={alternatives} />
+        </div>
+      )}
 
       {/* Detailed Analysis */}
       <div className="space-y-4">
@@ -316,11 +376,49 @@ export default function HybridFuzzyATPResultsDisplay({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-4 mt-8">
-        <button onClick={onReset} className="btn-secondary">
-          ← Start Over
-        </button>
+      {/* Export & Action Buttons */}
+      <div className="mt-8 space-y-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-bold text-blue-900 mb-3">📥 Export Results:</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <button
+              onClick={handleExportCSV}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-semibold transition-colors"
+            >
+              📊 Export to CSV
+            </button>
+            <button
+              onClick={handleExportJSON}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold transition-colors"
+            >
+              📄 Export to JSON
+            </button>
+            <button
+              onClick={handleExportHTML}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-semibold transition-colors"
+            >
+              🌐 Export to HTML
+            </button>
+            <button
+              onClick={onReset}
+              className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded font-semibold transition-colors"
+            >
+              ← Start Over
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tips for Using Results */}
+      <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+        <h3 className="font-bold text-yellow-900 mb-2">💡 Using These Results:</h3>
+        <ul className="text-sm text-yellow-800 space-y-1">
+          <li>✓ <strong>Interview Feedback:</strong> Share rankings with hiring team</li>
+          <li>✓ <strong>Decision Documentation:</strong> Export results for audit trail</li>
+          <li>✓ <strong>Comparison View:</strong> Use to discuss candidate strengths/weaknesses</li>
+          <li>✓ <strong>Fair & Objective:</strong> Results based on weighted criteria, not bias</li>
+          <li>✓ <strong>Transparency:</strong> Show candidates how they were evaluated</li>
+        </ul>
       </div>
     </div>
   );

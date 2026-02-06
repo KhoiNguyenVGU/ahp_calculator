@@ -83,6 +83,7 @@ export default function Home() {
   const [hybridCriteriaTypes, setHybridCriteriaTypes] = useState<('benefit' | 'cost')[]>(['benefit', 'benefit']);
   const [hybridCriteriaMatrix, setHybridCriteriaMatrix] = useState<string[][]>([]);
   const [hybridAlternativeDataMatrix, setHybridAlternativeDataMatrix] = useState<string[][]>([]);
+  const [hybridDataMatrix, setHybridDataMatrix] = useState<number[][]>([]);
   const [hybridResults, setHybridResults] = useState<HybridFuzzyATPTopsisResult | null>(null);
 
   // Initialize AHP criteria matrix when criteria change
@@ -377,6 +378,7 @@ export default function Home() {
     setHybridCriteriaTypes(['benefit', 'benefit']);
     setHybridCriteriaMatrix([]);
     setHybridAlternativeDataMatrix([]);
+    setHybridDataMatrix([]);
     setHybridResults(null);
   };
 
@@ -640,6 +642,8 @@ export default function Home() {
                 setAlternatives={setHybridAlternatives}
                 criteriaTypes={hybridCriteriaTypes}
                 setCriteriaTypes={setHybridCriteriaTypes}
+                dataMatrix={hybridDataMatrix}
+                setDataMatrix={setHybridDataMatrix}
                 onNext={() => setHybridStep(1)}
               />
             )}
@@ -660,6 +664,7 @@ export default function Home() {
                 alternatives={hybridAlternatives}
                 dataMatrix={hybridAlternativeDataMatrix}
                 setDataMatrix={setHybridAlternativeDataMatrix}
+                prefilledDataMatrix={hybridDataMatrix}
                 onNext={handleHybridCalculate}
                 onBack={() => setHybridStep(1)}
               />
