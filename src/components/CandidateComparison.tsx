@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { HybridFuzzyATPTopsisResult } from '@/utils/hybridFuzzyATPTopsis';
 
 interface CandidateComparisonProps {
@@ -14,6 +14,8 @@ export default function CandidateComparison({
   criteria,
   alternatives,
 }: CandidateComparisonProps) {
+  const [showAllCandidates, setShowAllCandidates] = useState(false);
+  
   // Rank candidates
   const ranked = alternatives
     .map((alt, idx) => ({
@@ -25,6 +27,9 @@ export default function CandidateComparison({
 
   // Get top 3 for quick comparison
   const topThree = ranked.slice(0, 3);
+  
+  // Get displayed candidates for table (15 by default)
+  const displayedRanked = showAllCandidates ? ranked : ranked.slice(0, 15);
 
   return (
     <div className="card max-w-6xl mx-auto">
@@ -130,7 +135,7 @@ export default function CandidateComparison({
             </tr>
           </thead>
           <tbody>
-            {ranked.map((candidate, rank) => (
+            {displayedRanked.map((candidate, rank) => (
               <tr key={candidate.index} className={rank % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="border border-gray-300 px-4 py-2 font-bold text-lg">
                   {rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : rank + 1}
@@ -156,6 +161,18 @@ export default function CandidateComparison({
           </tbody>
         </table>
       </div>
+      
+      {/* Show More/Less Button */}
+      {ranked.length > 15 && (
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setShowAllCandidates(!showAllCandidates)}
+            className="px-6 py-2 bg-white hover:bg-blue-50 border-2 border-blue-300 text-blue-700 font-semibold rounded-lg transition-colors"
+          >
+            {showAllCandidates ? '▲' : '▼'} {showAllCandidates ? 'Show Top 15 Only' : `Show All Candidates (${ranked.length - 15} more)`}
+          </button>
+        </div>
+      )}
 
       {/* Statistical Summary */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
