@@ -13,17 +13,28 @@ import FAHPInputStep from '@/components/FAHPInputStep';
 import FAHPCriteriaComparison from '@/components/FAHPCriteriaComparison';
 import FAHPAlternativeComparison from '@/components/FAHPAlternativeComparison';
 import FAHPResultsDisplay from '@/components/FAHPResultsDisplay';
+import FuzzyTOPSISInputStep from '@/components/FuzzyTOPSISInputStep';
+import FuzzyTOPSISResultsDisplay from '@/components/FuzzyTOPSISResultsDisplay';
+import HybridFuzzyATPInputStep from '@/components/HybridFuzzyATPInputStep';
+import HybridFuzzyATPCriteriaComparison from '@/components/HybridFuzzyATPCriteriaComparison';
+import HybridFuzzyATPAlternativeData from '@/components/HybridFuzzyATPAlternativeData';
+import HybridFuzzyATPResultsDisplay from '@/components/HybridFuzzyATPResultsDisplay';
 import { calculateAHP, AHPResult } from '@/utils/ahp';
 import { calculateTOPSIS, TOPSISResult } from '@/utils/topsis';
 import { calculateFAHP, FAHPResult } from '@/utils/fahp';
+import { calculateFuzzyTOPSIS, FuzzyTOPSISResult } from '@/utils/fuzzyTopsis';
+import { calculateHybridFuzzyATPTopsis, HybridFuzzyATPTopsisResult } from '@/utils/hybridFuzzyATPTopsis';
+import { TFN } from '@/utils/fahp';
 
 const AHP_STEPS = ['Define Problem', 'Compare Criteria', 'Compare Alternatives', 'Results'];
 const TOPSIS_STEPS = ['Enter Data', 'Set Weights', 'Results'];
 const FAHP_STEPS = ['Define Problem', 'Compare Criteria', 'Compare Alternatives', 'Results'];
+const FUZZY_TOPSIS_STEPS = ['Define Problem & Weights', 'Results'];
+const HYBRID_FUZZY_ATP_STEPS = ['Define Problem', 'Compare Criteria (Fuzzy AHP)', 'Enter Alternative Data (Fuzzy TOPSIS)', 'Results'];
 
 export default function Home() {
   // Tab state
-  const [activeTab, setActiveTab] = useState<'ahp' | 'topsis' | 'fahp'>('ahp');
+  const [activeTab, setActiveTab] = useState<'ahp' | 'topsis' | 'fahp' | 'fuzzy-topsis' | 'hybrid-fuzzy-atp'>('ahp');
 
   // AHP State
   const [ahpStep, setAhpStep] = useState(0);
@@ -51,6 +62,28 @@ export default function Home() {
   const [fahpCriteriaMatrix, setFahpCriteriaMatrix] = useState<string[][]>([]);
   const [fahpAlternativeMatrices, setFahpAlternativeMatrices] = useState<string[][][]>([]);
   const [fahpResults, setFahpResults] = useState<FAHPResult | null>(null);
+
+  // Fuzzy TOPSIS State
+  const [fuzzyTopsisStep, setFuzzyTopsisStep] = useState(0);
+  const [fuzzyTopsisCriteria, setFuzzyTopsisCriteria] = useState<string[]>(['', '']);
+  const [fuzzyTopsisAlternatives, setFuzzyTopsisAlternatives] = useState<string[]>(['', '']);
+  const [fuzzyTopsisCriteriaTypes, setFuzzyTopsisCriteriaTypes] = useState<('benefit' | 'cost')[]>(['benefit', 'benefit']);
+  const [fuzzyTopsisDataMatrix, setFuzzyTopsisDataMatrix] = useState<string[][]>([['', ''], ['', '']]);
+  const [fuzzyTopsisWeights, setFuzzyTopsisWeights] = useState<TFN[]>([
+    { l: 0.3, m: 0.5, u: 0.7 },
+    { l: 0.3, m: 0.5, u: 0.7 },
+  ]);
+  const [fuzzyTopsisResults, setFuzzyTopsisResults] = useState<FuzzyTOPSISResult | null>(null);
+
+  // Hybrid Fuzzy AHP-TOPSIS State
+  const [hybridStep, setHybridStep] = useState(0);
+  const [hybridGoal, setHybridGoal] = useState('');
+  const [hybridCriteria, setHybridCriteria] = useState<string[]>(['Criterion 1', 'Criterion 2']);
+  const [hybridAlternatives, setHybridAlternatives] = useState<string[]>(['Alternative 1', 'Alternative 2']);
+  const [hybridCriteriaTypes, setHybridCriteriaTypes] = useState<('benefit' | 'cost')[]>(['benefit', 'benefit']);
+  const [hybridCriteriaMatrix, setHybridCriteriaMatrix] = useState<string[][]>([]);
+  const [hybridAlternativeDataMatrix, setHybridAlternativeDataMatrix] = useState<string[][]>([]);
+  const [hybridResults, setHybridResults] = useState<HybridFuzzyATPTopsisResult | null>(null);
 
   // Initialize AHP criteria matrix when criteria change
   useEffect(() => {
@@ -163,6 +196,75 @@ export default function Home() {
     setFahpAlternativeMatrices(newMatrices);
   }, [fahpCriteria.length, fahpAlternatives.length]);
 
+  // Initialize Fuzzy TOPSIS data matrix when criteria/alternatives change
+  useEffect(() => {
+    const numAlternatives = fuzzyTopsisAlternatives.length;
+    const numCriteria = fuzzyTopsisCriteria.length;
+    const newMatrix: string[][] = Array(numAlternatives)
+      .fill(null)
+      .map(() => Array(numCriteria).fill(''));
+
+    for (let i = 0; i < Math.min(fuzzyTopsisDataMatrix.length, numAlternatives); i++) {
+      for (let j = 0; j < Math.min(fuzzyTopsisDataMatrix[i].length, numCriteria); j++) {
+        if (fuzzyTopsisDataMatrix[i][j]) {
+          newMatrix[i][j] = fuzzyTopsisDataMatrix[i][j];
+        }
+      }
+    }
+
+    setFuzzyTopsisDataMatrix(newMatrix);
+  }, [fuzzyTopsisCriteria.length, fuzzyTopsisAlternatives.length]);
+
+  // Initialize Fuzzy TOPSIS weights when criteria change
+  useEffect(() => {
+    const n = fuzzyTopsisCriteria.length;
+    const defaultWeight: TFN = { l: 0.3, m: 0.5, u: 0.7 };
+    if (fuzzyTopsisWeights.length !== n) {
+      setFuzzyTopsisWeights(Array(n).fill(defaultWeight).map(() => ({ ...defaultWeight })));
+    }
+  }, [fuzzyTopsisCriteria.length]);
+
+  // Initialize Hybrid criteria matrix when criteria change
+  useEffect(() => {
+    const n = hybridCriteria.length;
+    const newMatrix: string[][] = Array(n)
+      .fill(null)
+      .map((_, i) =>
+        Array(n)
+          .fill(null)
+          .map((_, j) => (i === j ? '1' : '1'))
+      );
+
+    for (let i = 0; i < Math.min(hybridCriteriaMatrix.length, n); i++) {
+      for (let j = 0; j < Math.min(hybridCriteriaMatrix[i].length, n); j++) {
+        if (hybridCriteriaMatrix[i][j]) {
+          newMatrix[i][j] = hybridCriteriaMatrix[i][j];
+        }
+      }
+    }
+
+    setHybridCriteriaMatrix(newMatrix);
+  }, [hybridCriteria.length]);
+
+  // Initialize Hybrid alternative data matrix when alternatives/criteria change
+  useEffect(() => {
+    const numAlternatives = hybridAlternatives.length;
+    const numCriteria = hybridCriteria.length;
+    const newMatrix: string[][] = Array(numAlternatives)
+      .fill(null)
+      .map(() => Array(numCriteria).fill(''));
+
+    for (let i = 0; i < Math.min(hybridAlternativeDataMatrix.length, numAlternatives); i++) {
+      for (let j = 0; j < Math.min(hybridAlternativeDataMatrix[i].length, numCriteria); j++) {
+        if (hybridAlternativeDataMatrix[i][j]) {
+          newMatrix[i][j] = hybridAlternativeDataMatrix[i][j];
+        }
+      }
+    }
+
+    setHybridAlternativeDataMatrix(newMatrix);
+  }, [hybridCriteria.length, hybridAlternatives.length]);
+
   // AHP calculate
   const handleAHPCalculate = () => {
     const result = calculateAHP(
@@ -228,6 +330,56 @@ export default function Home() {
     setFahpResults(null);
   };
 
+  // Fuzzy TOPSIS calculate
+  const handleFuzzyTOPSISCalculate = () => {
+    const rawMatrix = fuzzyTopsisDataMatrix.map(row => row.map(cell => parseFloat(cell)));
+    
+    const result = calculateFuzzyTOPSIS(rawMatrix, fuzzyTopsisWeights, fuzzyTopsisCriteriaTypes);
+    setFuzzyTopsisResults(result);
+    setFuzzyTopsisStep(1);
+  };
+
+  const handleFuzzyTOPSISRestart = () => {
+    setFuzzyTopsisStep(0);
+    setFuzzyTopsisCriteria(['', '']);
+    setFuzzyTopsisAlternatives(['', '']);
+    setFuzzyTopsisCriteriaTypes(['benefit', 'benefit']);
+    setFuzzyTopsisDataMatrix([['', ''], ['', '']]);
+    setFuzzyTopsisWeights([
+      { l: 0.3, m: 0.5, u: 0.7 },
+      { l: 0.3, m: 0.5, u: 0.7 },
+    ]);
+    setFuzzyTopsisResults(null);
+  };
+
+  // Hybrid Fuzzy AHP-TOPSIS calculate
+  const handleHybridCalculate = () => {
+    const rawAlternativeMatrix = hybridAlternativeDataMatrix.map(row =>
+      row.map(cell => parseFloat(cell))
+    );
+
+    const result = calculateHybridFuzzyATPTopsis(
+      hybridCriteriaMatrix,
+      rawAlternativeMatrix,
+      hybridCriteria.length,
+      hybridAlternatives.length,
+      hybridCriteriaTypes
+    );
+    setHybridResults(result);
+    setHybridStep(3);
+  };
+
+  const handleHybridRestart = () => {
+    setHybridStep(0);
+    setHybridGoal('');
+    setHybridCriteria(['Criterion 1', 'Criterion 2']);
+    setHybridAlternatives(['Alternative 1', 'Alternative 2']);
+    setHybridCriteriaTypes(['benefit', 'benefit']);
+    setHybridCriteriaMatrix([]);
+    setHybridAlternativeDataMatrix([]);
+    setHybridResults(null);
+  };
+
   return (
     <main className="min-h-screen py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -273,6 +425,26 @@ export default function Home() {
               }`}
             >
               TOPSIS Method
+            </button>
+            <button
+              onClick={() => setActiveTab('fuzzy-topsis')}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                activeTab === 'fuzzy-topsis'
+                  ? 'bg-white text-cyan-600 shadow-md'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Fuzzy TOPSIS
+            </button>
+            <button
+              onClick={() => setActiveTab('hybrid-fuzzy-atp')}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                activeTab === 'hybrid-fuzzy-atp'
+                  ? 'bg-white text-pink-600 shadow-md'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Hybrid Fuzzy AHP-TOPSIS
             </button>
           </div>
         </div>
@@ -419,6 +591,93 @@ export default function Home() {
           </>
         )}
 
+        {/* Fuzzy TOPSIS Tab Content */}
+        {activeTab === 'fuzzy-topsis' && (
+          <>
+            <StepIndicator currentStep={fuzzyTopsisStep} steps={FUZZY_TOPSIS_STEPS} />
+
+            {fuzzyTopsisStep === 0 && (
+              <FuzzyTOPSISInputStep
+                criteria={fuzzyTopsisCriteria}
+                setCriteria={setFuzzyTopsisCriteria}
+                alternatives={fuzzyTopsisAlternatives}
+                setAlternatives={setFuzzyTopsisAlternatives}
+                criteriaTypes={fuzzyTopsisCriteriaTypes}
+                setCriteriaTypes={setFuzzyTopsisCriteriaTypes}
+                dataMatrix={fuzzyTopsisDataMatrix}
+                setDataMatrix={setFuzzyTopsisDataMatrix}
+                fuzzyWeights={fuzzyTopsisWeights}
+                setFuzzyWeights={setFuzzyTopsisWeights}
+                onNext={handleFuzzyTOPSISCalculate}
+              />
+            )}
+
+            {fuzzyTopsisStep === 1 && fuzzyTopsisResults && (
+              <FuzzyTOPSISResultsDisplay
+                result={fuzzyTopsisResults}
+                criteria={fuzzyTopsisCriteria}
+                alternatives={fuzzyTopsisAlternatives}
+                criteriaTypes={fuzzyTopsisCriteriaTypes}
+                fuzzyWeights={fuzzyTopsisWeights}
+                onReset={handleFuzzyTOPSISRestart}
+              />
+            )}
+          </>
+        )}
+
+        {/* Hybrid Fuzzy AHP-TOPSIS Tab Content */}
+        {activeTab === 'hybrid-fuzzy-atp' && (
+          <>
+            <StepIndicator currentStep={hybridStep} steps={HYBRID_FUZZY_ATP_STEPS} />
+
+            {hybridStep === 0 && (
+              <HybridFuzzyATPInputStep
+                goal={hybridGoal}
+                setGoal={setHybridGoal}
+                criteria={hybridCriteria}
+                setCriteria={setHybridCriteria}
+                alternatives={hybridAlternatives}
+                setAlternatives={setHybridAlternatives}
+                criteriaTypes={hybridCriteriaTypes}
+                setCriteriaTypes={setHybridCriteriaTypes}
+                onNext={() => setHybridStep(1)}
+              />
+            )}
+
+            {hybridStep === 1 && (
+              <HybridFuzzyATPCriteriaComparison
+                criteria={hybridCriteria}
+                criteriaMatrix={hybridCriteriaMatrix}
+                setCriteriaMatrix={setHybridCriteriaMatrix}
+                onNext={() => setHybridStep(2)}
+                onBack={() => setHybridStep(0)}
+              />
+            )}
+
+            {hybridStep === 2 && (
+              <HybridFuzzyATPAlternativeData
+                criteria={hybridCriteria}
+                alternatives={hybridAlternatives}
+                dataMatrix={hybridAlternativeDataMatrix}
+                setDataMatrix={setHybridAlternativeDataMatrix}
+                onNext={handleHybridCalculate}
+                onBack={() => setHybridStep(1)}
+              />
+            )}
+
+            {hybridStep === 3 && hybridResults && (
+              <HybridFuzzyATPResultsDisplay
+                result={hybridResults}
+                goal={hybridGoal}
+                criteria={hybridCriteria}
+                alternatives={hybridAlternatives}
+                criteriaTypes={hybridCriteriaTypes}
+                onReset={handleHybridRestart}
+              />
+            )}
+          </>
+        )}
+
         {/* Footer */}
         <div className="text-center mt-12 text-gray-500 text-sm">
           <p>
@@ -429,6 +688,12 @@ export default function Home() {
           </p>
           <p>
             TOPSIS: Technique for Order of Preference by Similarity to Ideal Solution
+          </p>
+          <p>
+            Fuzzy TOPSIS: Combines Fuzzy Logic with TOPSIS for uncertain decision making
+          </p>
+          <p>
+            Hybrid Fuzzy AHP-TOPSIS: Integrated approach combining Fuzzy AHP weights with Fuzzy TOPSIS ranking
           </p>
         </div>
       </div>
