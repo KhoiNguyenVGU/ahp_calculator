@@ -12,7 +12,7 @@ interface ColumnMapping {
 }
 
 const MAX_PREVIEW_ROWS = 500; // Limit preview to 500 rows for performance
-const MAX_PROCESSING_ROWS = 5000; // Limit processing to 5000 rows
+const MAX_PROCESSING_ROWS = 30000; // Limit processing to 30000 rows
 const MAX_COLUMNS_DISPLAY = 25; // Show max 25 columns in mapping interface
 
 export default function DatasetLoader({ onDataLoaded, onMappingComplete }: DatasetLoaderProps) {
