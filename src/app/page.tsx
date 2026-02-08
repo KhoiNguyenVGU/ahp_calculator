@@ -408,16 +408,18 @@ export default function Home() {
             >
               AHP Method
             </button>
+
             <button
               onClick={() => setActiveTab('fahp')}
               className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                 activeTab === 'fahp'
-                  ? 'bg-white text-purple-600 shadow-md'
+                  ? 'bg-white text-blue-600 shadow-md'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
               Fuzzy AHP
             </button>
+
             <button
               onClick={() => setActiveTab('topsis')}
               className={`px-6 py-3 rounded-lg font-semibold transition-all ${
@@ -428,21 +430,23 @@ export default function Home() {
             >
               TOPSIS Method
             </button>
+
             <button
               onClick={() => setActiveTab('fuzzy-topsis')}
               className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                 activeTab === 'fuzzy-topsis'
-                  ? 'bg-white text-cyan-600 shadow-md'
+                  ? 'bg-white text-blue-600 shadow-md'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
               Fuzzy TOPSIS
             </button>
+
             <button
               onClick={() => setActiveTab('hybrid-fuzzy-atp')}
               className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                 activeTab === 'hybrid-fuzzy-atp'
-                  ? 'bg-white text-pink-600 shadow-md'
+                  ? 'bg-white text-blue-600 shadow-md'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
@@ -450,6 +454,7 @@ export default function Home() {
             </button>
           </div>
         </div>
+
 
         {/* AHP Tab Content */}
         {activeTab === 'ahp' && (

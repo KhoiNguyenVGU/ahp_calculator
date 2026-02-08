@@ -118,13 +118,14 @@ export default function FuzzyTOPSISInputStep({
       {/* Criteria Section */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <label className="block text-sm font-bold text-gray-700">
+          <label className="block text-sm font-medium text-gray-700">
             Criteria (min 2) with Fuzzy Weights
           </label>
           <button onClick={addCriterion} className="btn-secondary text-sm">
             + Add Criterion
           </button>
         </div>
+
         <div className="space-y-4">
           {criteria.map((criterion, index) => (
             <div
@@ -137,36 +138,36 @@ export default function FuzzyTOPSISInputStep({
                   value={criterion}
                   onChange={(e) => updateCriterion(index, e.target.value)}
                   placeholder={`Criterion ${index + 1}`}
-                  className="input"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+
                 <select
                   value={criteriaTypes[index]}
                   onChange={(e) =>
-                    updateCriteriaType(
-                      index,
-                      e.target.value as 'benefit' | 'cost'
-                    )
+                    updateCriteriaType(index, e.target.value as 'benefit' | 'cost')
                   }
-                  className="input"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="benefit">Benefit (higher is better)</option>
-                  <option value="cost">Cost (lower is better)</option>
+                  <option value="benefit">📈 Benefit (higher is better)</option>
+                  <option value="cost">📉 Cost (lower is better)</option>
                 </select>
+
                 {criteria.length > 2 && (
                   <button
                     onClick={() => removeCriterion(index)}
-                    className="btn-danger"
+                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg self-start"
                   >
-                    Remove
+                    ✕
                   </button>
                 )}
               </div>
 
               {/* Fuzzy Weight Input */}
-              <div className="bg-white p-3 rounded border border-blue-200">
+              <div className="bg-white p-3 rounded-lg border border-blue-200">
                 <p className="text-xs font-semibold text-gray-700 mb-2">
                   Fuzzy Weight (Lower, Middle, Upper):
                 </p>
+
                 <div className="grid grid-cols-4 gap-2 mb-2">
                   <input
                     type="number"
@@ -176,7 +177,7 @@ export default function FuzzyTOPSISInputStep({
                     value={fuzzyWeights[index]?.l.toFixed(2)}
                     onChange={(e) => updateFuzzyWeight(index, 'l', e.target.value)}
                     placeholder="L"
-                    className="input text-sm py-1"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <input
                     type="number"
@@ -186,7 +187,7 @@ export default function FuzzyTOPSISInputStep({
                     value={fuzzyWeights[index]?.m.toFixed(2)}
                     onChange={(e) => updateFuzzyWeight(index, 'm', e.target.value)}
                     placeholder="M"
-                    className="input text-sm py-1"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <input
                     type="number"
@@ -196,14 +197,13 @@ export default function FuzzyTOPSISInputStep({
                     value={fuzzyWeights[index]?.u.toFixed(2)}
                     onChange={(e) => updateFuzzyWeight(index, 'u', e.target.value)}
                     placeholder="U"
-                    className="input text-sm py-1"
+                    className="w-full px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <div className="text-xs text-gray-600 flex items-center">
                     ({fuzzyWeights[index]?.l.toFixed(2)}, {fuzzyWeights[index]?.m.toFixed(2)}, {fuzzyWeights[index]?.u.toFixed(2)})
                   </div>
                 </div>
 
-                {/* Quick Preset Buttons */}
                 <div className="flex flex-wrap gap-1">
                   {Object.keys(fuzzyTopsisWeightScale).map((preset) => (
                     <button
@@ -221,16 +221,15 @@ export default function FuzzyTOPSISInputStep({
         </div>
       </div>
 
-      {/* Alternatives Section */}
+      {/* Alternatives */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <label className="block text-sm font-bold text-gray-700">
-            Alternatives (min 2)
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Alternatives</label>
           <button onClick={addAlternative} className="btn-secondary text-sm">
             + Add Alternative
           </button>
         </div>
+
         <div className="space-y-2">
           {alternatives.map((alt, index) => (
             <div key={index} className="flex gap-2">
@@ -239,14 +238,14 @@ export default function FuzzyTOPSISInputStep({
                 value={alt}
                 onChange={(e) => updateAlternative(index, e.target.value)}
                 placeholder={`Alternative ${index + 1}`}
-                className="input flex-1"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {alternatives.length > 2 && (
                 <button
                   onClick={() => removeAlternative(index)}
-                  className="btn-danger"
+                  className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
                 >
-                  Remove
+                  ✕
                 </button>
               )}
             </div>
@@ -254,47 +253,33 @@ export default function FuzzyTOPSISInputStep({
         </div>
       </div>
 
-      {/* Data Matrix Section */}
+      {/* Decision Matrix */}
       <div className="mb-8">
-        <label className="block text-sm font-bold text-gray-700 mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-4">
           Decision Matrix (values)
         </label>
+
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse">
             <thead>
               <tr className="bg-gray-200">
-                <th className="border border-gray-300 px-4 py-2 text-left">
-                  Alternative
-                </th>
+                <th className="border px-4 py-2 text-left">Alternative</th>
                 {criteria.map((crit, index) => (
-                  <th
-                    key={index}
-                    className="border border-gray-300 px-4 py-2 text-left"
-                  >
-                    {crit}
-                  </th>
+                  <th key={index} className="border px-4 py-2 text-left">{crit}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {alternatives.map((alt, i) => (
                 <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="border border-gray-300 px-4 py-2 font-semibold">
-                    {alt}
-                  </td>
+                  <td className="border px-4 py-2 font-semibold">{alt}</td>
                   {criteria.map((_, j) => (
-                    <td
-                      key={j}
-                      className="border border-gray-300 px-4 py-2"
-                    >
+                    <td key={j} className="border px-4 py-2">
                       <input
                         type="number"
                         value={dataMatrix[i][j]}
-                        onChange={(e) =>
-                          updateDataCell(i, j, e.target.value)
-                        }
-                        placeholder="0"
-                        className="input w-full py-1"
+                        onChange={(e) => updateDataCell(i, j, e.target.value)}
+                        className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         step="0.01"
                       />
                     </td>
@@ -306,16 +291,14 @@ export default function FuzzyTOPSISInputStep({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={onNext}
-          disabled={!canProceed}
-          className={`btn-primary ${!canProceed && 'opacity-50 cursor-not-allowed'}`}
-        >
+      {/* Action */}
+      <div className="flex justify-end">
+        <button onClick={onNext} disabled={!canProceed} className="btn-primary">
           Calculate Results →
         </button>
       </div>
     </div>
   );
+
+
 }

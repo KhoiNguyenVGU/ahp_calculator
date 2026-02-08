@@ -111,8 +111,8 @@ export default function TOPSISInputStep({
                 onChange={(e) => updateCriteriaType(index, e.target.value as 'benefit' | 'cost')}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="benefit">Higher Better</option>
-                <option value="cost">Lower Better</option>
+                <option value="benefit">📈 Benefit (higher is better)</option>
+                <option value="cost">📉 Cost (lower is better)</option>
               </select>
               {criteria.length > 2 && (
                 <button

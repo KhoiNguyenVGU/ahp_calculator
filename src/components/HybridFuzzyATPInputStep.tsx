@@ -121,7 +121,7 @@ export default function HybridFuzzyATPInputStep({
     alternatives.length >= 2;
 
   return (
-    <div className="card max-w-4xl mx-auto">
+    <div className="bg-white p-6 rounded-lg shadow-md max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">
         Step 1: Define Your Decision Problem
       </h2>
@@ -135,40 +135,24 @@ export default function HybridFuzzyATPInputStep({
           Choose Data Source
         </label>
         <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setInputMode('manual')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              inputMode === 'manual' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            ✏️ Manual Entry
-          </button>
-          <button
-            onClick={() => setInputMode('example')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              inputMode === 'example' 
-                ? 'bg-green-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            📝 Example Data
-          </button>
-          <button
-            onClick={() => setInputMode('dataset')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              inputMode === 'dataset' 
-                ? 'bg-purple-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            📊 Import Dataset
-          </button>
+          {['manual','example','dataset'].map(mode => (
+            <button
+              key={mode}
+              onClick={() => setInputMode(mode as any)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                inputMode === mode
+                  ? 'bg-gray-700 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {mode === 'manual' && '✏️ Manual Entry'}
+              {mode === 'example' && '📝 Example Data'}
+              {mode === 'dataset' && '📊 Import Dataset'}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Dataset Loader */}
       {inputMode === 'dataset' && (
         <div className="mb-8">
           <DatasetLoader
@@ -178,7 +162,6 @@ export default function HybridFuzzyATPInputStep({
         </div>
       )}
 
-      {/* Example Data Loader */}
       {inputMode === 'example' && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <button
@@ -186,7 +169,7 @@ export default function HybridFuzzyATPInputStep({
               loadExampleData();
               setShowExample(true);
             }}
-            className="text-s font-semibold text-green-700 hover:text-green-800"
+            className="text-sm font-semibold text-green-700 hover:text-green-800"
           >
             📝 Load Interview Example (click to auto-fill)
           </button>
@@ -198,170 +181,117 @@ export default function HybridFuzzyATPInputStep({
         </div>
       )}
 
-      {/* Manual Input Form */}
       {(inputMode === 'manual' || inputMode === 'example' || (inputMode === 'dataset' && criteria.length > 0)) && (
         <div>
 
-      {/* Goal Definition */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-bold text-gray-700">
-            📌 Decision Goal/Problem <span className="text-red-500">*</span>
-          </label>
-          <span
-            className="text-xs text-gray-500 cursor-help"
-            title="e.g., 'Select the best candidate for Senior Software Engineer position'"
-          >
-            ℹ️ Example
-          </span>
-        </div>
-        <input
-          type="text"
-          value={goal}
-          onChange={(e) => setGoal(e.target.value)}
-          placeholder="e.g., Select the best candidate for Senior Software Engineer position"
-          className="input w-full"
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          Describe what you're trying to decide or achieve
-        </p>
-      </div>
-
-      {/* Criteria Section */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <label className="block text-sm font-bold text-gray-700">
-            📊 Evaluation Criteria (min 2) <span className="text-red-500">*</span>
-          </label>
-          <button onClick={addCriterion} className="btn-secondary text-sm">
-            + Add Criterion
-          </button>
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4 text-xs text-blue-800">
-          <strong>💡 About Criteria:</strong> Define what qualities/skills you'll evaluate candidates on.
-          These will be compared pairwise using Fuzzy AHP to determine their importance weights.
-          Example for hiring: Technical Skills, Communication, Problem-Solving, Leadership, Experience
-        </div>
-
-        <div className="space-y-3">
-          {criteria.map((criterion, index) => (
-            <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
-                <input
-                  type="text"
-                  value={criterion}
-                  onChange={(e) => updateCriterion(index, e.target.value)}
-                  placeholder={`Criterion ${index + 1}`}
-                  className="input"
-                />
-                <select
-                  value={criteriaTypes[index]}
-                  onChange={(e) =>
-                    updateCriteriaType(index, e.target.value as 'benefit' | 'cost')
-                  }
-                  className="input"
-                >
-                  <option value="benefit">📈 Benefit (higher is better)</option>
-                  <option value="cost">📉 Cost (lower is better)</option>
-                </select>
-              </div>
-              {criteria.length > 2 && (
-                <button
-                  onClick={() => removeCriterion(index)}
-                  className="btn-danger text-xs w-full"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Alternatives/Candidates Section */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <label className="block text-sm font-bold text-gray-700">
-            👥 Candidates to Evaluate (min 2) <span className="text-red-500">*</span>
-          </label>
-          <button onClick={addAlternative} className="btn-secondary text-sm">
-            + Add Candidate
-          </button>
-        </div>
-
-        <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4 text-xs text-yellow-800">
-          <strong>💡 About Candidates:</strong> These are the options being evaluated.
-          In the next steps, you'll rate each candidate on each criterion and compare criteria importance.
-        </div>
-
-        <div className="space-y-2">
-          {alternatives.slice(0, showAllCandidates ? alternatives.length : 15).map((alt, displayIndex) => {
-            const actualIndex = displayIndex; // displayIndex is correct since we're slicing the array
-            return (
-              <div key={actualIndex} className="flex gap-2">
-                <input
-                  type="text"
-                  value={alt}
-                  onChange={(e) => updateAlternative(actualIndex, e.target.value)}
-                  placeholder={`Candidate ${actualIndex + 1}`}
-                  className="input flex-1"
-                />
-                {alternatives.length > 2 && (
-                  <button
-                    onClick={() => removeAlternative(actualIndex)}
-                    className="btn-danger"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Expand/Collapse Button */}
-        {alternatives.length > 15 && (
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setShowAllCandidates(!showAllCandidates)}
-              className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-200"
-            >
-              {showAllCandidates ? (
-                <>
-                  ▲ Show Less (hiding {alternatives.length - 15} candidates)
-                </>
-              ) : (
-                <>
-                  ▼ Show All Candidates ({alternatives.length - 15} more)
-                </>
-              )}
-            </button>
+          {/* Goal */}
+          <div className="mb-8">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              📌 Decision Goal/Problem <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              placeholder="e.g., Select the best candidate..."
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-        )}
-      </div>
 
-      {/* Workflow Overview */}
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-8">
-        <h3 className="font-bold text-purple-900 mb-2">🎯 Next Steps Overview:</h3>
-        <ol className="text-sm text-purple-800 space-y-1 ml-4 list-decimal">
-          <li><strong>Step 2 - Fuzzy AHP:</strong> You'll compare criteria pairwise to determine their importance weights</li>
-          <li><strong>Step 3 - Candidate Scoring:</strong> You'll rate each candidate on each criterion (1-10 scale)</li>
-          <li><strong>Step 4 - Results:</strong> System ranks candidates using the weighted criteria, exports reports, and shows comparisons</li>
-        </ol>
-      </div>
+          {/* Criteria */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <label className="block text-sm font-bold text-gray-700">
+                📊 Evaluation Criteria (min 2) <span className="text-red-500">*</span>
+              </label>
+              <button onClick={addCriterion} className="btn-secondary text-sm">
+                + Add Criterion
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {criteria.map((criterion, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={criterion}
+                      onChange={(e) => updateCriterion(index, e.target.value)}
+                      placeholder={`Criterion ${index + 1}`}
+                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+
+                    <select
+                      value={criteriaTypes[index]}
+                      onChange={(e) =>
+                        updateCriteriaType(index, e.target.value as 'benefit' | 'cost')
+                      }
+                      className="w-64 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="benefit">📈 Benefit (higher is better)</option>
+                      <option value="cost">📉 Cost (lower is better)</option>
+                    </select>
+
+                    {criteria.length > 2 && (
+                      <button
+                        onClick={() => removeCriterion(index)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Candidates */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <label className="block text-sm font-bold text-gray-700">
+                👥 Candidates to Evaluate (min 2) <span className="text-red-500">*</span>
+              </label>
+              <button onClick={addAlternative} className="btn-secondary text-sm">
+                + Add Candidate
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {alternatives.map((alt, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <span className="w-8 text-center text-gray-500 font-medium">
+                    {index + 1}.
+                  </span>
+                  <input
+                    type="text"
+                    value={alt}
+                    onChange={(e) => updateAlternative(index, e.target.value)}
+                    placeholder={`Candidate ${index + 1}`}
+                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {alternatives.length > 2 && (
+                    <button
+                      onClick={() => removeAlternative(index)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
 
         </div>
       )}
 
-      {/* Validation Message */}
       {!canProceed && (
         <div className="bg-red-50 border border-red-200 rounded p-3 mb-4 text-sm text-red-700">
-          ❌ Please fill in all fields marked with <span className="text-red-500">*</span> to proceed
+          ❌ Please fill in all required fields
         </div>
       )}
 
-      {/* Action Button */}
       <div className="flex justify-end">
         <button
           onClick={onNext}
@@ -373,4 +303,6 @@ export default function HybridFuzzyATPInputStep({
       </div>
     </div>
   );
+
+
 }

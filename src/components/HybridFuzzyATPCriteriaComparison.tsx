@@ -55,7 +55,7 @@ export default function HybridFuzzyATPCriteriaComparison({
         Fuzzy AHP Phase - Compare Criteria Pairwise
       </h2>
       <p className="text-gray-600 mb-6">
-        Rate how much more important each criterion is compared to another. 
+        Rate how much more important each criterion is compared to another.
         Fuzzy AHP will convert these to fuzzy weights.
       </p>
 
@@ -64,14 +64,14 @@ export default function HybridFuzzyATPCriteriaComparison({
           <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
             <table className="min-w-full">
               <thead>
-                <tr className="bg-gradient-to-r from-purple-100 to-purple-50">
-                  <th className="border border-gray-300 px-4 py-3 text-left font-bold text-gray-800">
+                <tr className="bg-gray-200">
+                  <th className="border px-4 py-3 text-left font-medium text-gray-700">
                     Comparison
                   </th>
                   {criteria.map((crit, j) => (
                     <th
                       key={j}
-                      className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-700 text-sm"
+                      className="border px-4 py-3 text-left font-medium text-gray-700 text-sm"
                     >
                       {crit}
                     </th>
@@ -80,26 +80,21 @@ export default function HybridFuzzyATPCriteriaComparison({
               </thead>
               <tbody>
                 {criteria.map((critI, i) => (
-                  <tr
-                    key={i}
-                    className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                  >
-                    <td className="border border-gray-300 px-4 py-3 font-semibold text-gray-800 bg-purple-50">
+                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="border px-4 py-3 font-medium text-gray-800 bg-gray-50">
                       {critI}
                     </td>
                     {criteria.map((critJ, j) => (
-                      <td key={j} className="border border-gray-300 px-4 py-3">
+                      <td key={j} className="border px-4 py-3">
                         {i === j ? (
-                          <div className="bg-gray-100 px-3 py-2 rounded text-center font-bold text-gray-600">
+                          <div className="bg-gray-100 px-3 py-2 rounded-lg text-center font-semibold text-gray-600">
                             1
                           </div>
                         ) : i < j ? (
                           <select
                             value={criteriaMatrix[i][j] || '1'}
-                            onChange={(e) =>
-                              handleValueChange(i, j, e.target.value)
-                            }
-                            className="input w-full py-1 text-sm"
+                            onChange={(e) => handleValueChange(i, j, e.target.value)}
+                            className="w-full px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             {fahpSaatyScale.map((item) => (
                               <option key={item.value} value={item.value}>
@@ -108,7 +103,7 @@ export default function HybridFuzzyATPCriteriaComparison({
                             ))}
                           </select>
                         ) : (
-                          <div className="bg-blue-50 px-3 py-2 rounded text-center text-sm text-blue-700 font-mono">
+                          <div className="bg-blue-50 px-3 py-2 rounded-lg text-center text-sm text-blue-700 font-mono">
                             {criteriaMatrix[i][j] || '1'}
                           </div>
                         )}
@@ -122,59 +117,50 @@ export default function HybridFuzzyATPCriteriaComparison({
         </div>
 
         {/* Scale Legend */}
-        <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 h-fit">
-          <h4 className="font-bold text-gray-800 mb-3">Saaty Scale</h4>
-          <div className="space-y-2 text-xs">
-            <div>
-              <span className="font-semibold">1</span> = Equal
-            </div>
-            <div>
-              <span className="font-semibold">3</span> = Moderate
-            </div>
-            <div>
-              <span className="font-semibold">5</span> = Strong
-            </div>
-            <div>
-              <span className="font-semibold">7</span> = Very strong
-            </div>
-            <div>
-              <span className="font-semibold">9</span> = Extreme
-            </div>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 h-fit">
+          <h4 className="text-sm font-medium text-gray-700 mb-3">Saaty Scale</h4>
+          <div className="space-y-2 text-xs text-gray-600">
+            <div><strong>1</strong> = Equal</div>
+            <div><strong>3</strong> = Moderate</div>
+            <div><strong>5</strong> = Strong</div>
+            <div><strong>7</strong> = Very strong</div>
+            <div><strong>9</strong> = Extreme</div>
             <hr className="my-2" />
-            <p className="text-gray-600">
-              Use 1/n for inverse values (e.g., 1/3 if less important)
-            </p>
+            <p>Use 1/n for inverse values (e.g., 1/3 if less important)</p>
           </div>
         </div>
       </div>
 
       {/* Info */}
-      <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 mb-8">
-        <p className="text-sm text-cyan-900">
-          <strong>Fuzzy Conversion:</strong> Your fuzzy scale ratings will be converted to 
-          Triangular Fuzzy Numbers (L, M, U) automatically. For example: 5 → (4, 5, 6)
+      <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+        <p className="text-sm text-gray-700">
+          <strong>Fuzzy Conversion:</strong> Ratings are converted to
+          Triangular Fuzzy Numbers (L, M, U). Example: 5 → (4, 5, 6)
         </p>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-between gap-4">
+      {/* Actions */}
+      <div className="flex justify-between">
         <button onClick={onBack} className="btn-secondary" disabled={isProcessing}>
           ← Back
         </button>
         <button
           onClick={handleNext}
           disabled={!isComplete || isProcessing}
-          className={`btn-primary ${(!isComplete || isProcessing) && 'opacity-50 cursor-not-allowed'}`}
+          className="btn-primary"
         >
           {isProcessing ? 'Processing...' : 'Enter Alternative Data →'}
         </button>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress */}
       {isProcessing && (
         <div className="mt-4">
           <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-            <div className="bg-blue-600 h-2.5 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+            <div
+              className="bg-blue-600 h-2.5 rounded-full animate-pulse"
+              style={{ width: '100%' }}
+            />
           </div>
           <p className="text-sm text-gray-600 text-center mt-2">
             Processing large dataset, please wait...
@@ -183,4 +169,5 @@ export default function HybridFuzzyATPCriteriaComparison({
       )}
     </div>
   );
+
 }

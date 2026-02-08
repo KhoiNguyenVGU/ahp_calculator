@@ -37,7 +37,7 @@ export default function FAHPResultsDisplay({
   return (
     <div className="space-y-6">
       {/* Winner Banner */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 rounded-lg text-white text-center">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-lg text-white text-center">
         <h2 className="text-2xl font-bold mb-2">🎉 Fuzzy AHP Results</h2>
         <p className="text-lg opacity-90">Goal: {goal}</p>
         <div className="mt-4 bg-white/20 rounded-lg p-4 inline-block">
@@ -55,7 +55,7 @@ export default function FAHPResultsDisplay({
             onClick={() => setCurrentStep(index)}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               currentStep === index
-                ? 'bg-purple-600 text-white'
+                ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
@@ -78,7 +78,7 @@ export default function FAHPResultsDisplay({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-purple-100">
+                  <tr className="bg-blue-100">
                     <th className="p-3 text-left border"></th>
                     {criteria.map((c, i) => (
                       <th key={i} className="p-3 text-center border min-w-[130px]">{c}</th>
@@ -88,9 +88,9 @@ export default function FAHPResultsDisplay({
                 <tbody>
                   {criteria.map((c, i) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="p-3 font-medium border bg-purple-50">{c}</td>
+                      <td className="p-3 font-medium border bg-blue-50">{c}</td>
                       {result.fuzzyCriteriaMatrix[i].map((tfn, j) => (
-                        <td key={j} className={`p-3 text-center border font-mono text-xs ${i === j ? 'bg-purple-100' : ''}`}>
+                        <td key={j} className={`p-3 text-center border font-mono text-xs ${i === j ? 'bg-blue-100' : ''}`}>
                           {formatTFN(tfn)}
                         </td>
                       ))}
@@ -102,21 +102,21 @@ export default function FAHPResultsDisplay({
           </div>
         )}
 
-        {/* Step 1: Geometric Means */}
+        {/* Step 1 */}
         {currentStep === 1 && (
           <div>
             <h3 className="text-lg font-semibold mb-4 text-gray-800">
               Step 2: Fuzzy Geometric Mean (r̃ᵢ)
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              r̃ᵢ = (∏ãᵢⱼ)^(1/n) - Calculate geometric mean for each row.
+              r̃ᵢ = (∏ãᵢⱼ)^(1/n)
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-purple-100">
+                  <tr className="bg-blue-100">
                     <th className="p-3 text-left border">Criterion</th>
-                    <th className="p-3 text-center border">Fuzzy Geometric Mean (l, m, u)</th>
+                    <th className="p-3 text-center border">(l, m, u)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,8 +128,8 @@ export default function FAHPResultsDisplay({
                       </td>
                     </tr>
                   ))}
-                  <tr className="bg-purple-100 font-semibold">
-                    <td className="p-3 border">Sum (r̃₁ ⊕ r̃₂ ⊕ ... ⊕ r̃ₙ)</td>
+                  <tr className="bg-blue-100 font-semibold">
+                    <td className="p-3 border">Sum</td>
                     <td className="p-3 text-center border font-mono">
                       {formatTFN(sumTFNs(result.criteriaGeometricMeans), 3)}
                     </td>
@@ -140,27 +140,19 @@ export default function FAHPResultsDisplay({
           </div>
         )}
 
-        {/* Step 2: Fuzzy Weights */}
+        {/* Step 2 */}
         {currentStep === 2 && (
           <div>
             <h3 className="text-lg font-semibold mb-4 text-gray-800">
               Step 3: Fuzzy Weights (w̃ᵢ)
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              w̃ᵢ = r̃ᵢ ⊗ (r̃₁ ⊕ r̃₂ ⊕ ... ⊕ r̃ₙ)⁻¹
-            </p>
-            <div className="bg-gray-50 p-4 rounded-lg mb-4 text-sm font-mono">
-              <p>Sum inverse: (1/{sumTFNs(result.criteriaGeometricMeans).u.toFixed(3)}, 
-                 1/{sumTFNs(result.criteriaGeometricMeans).m.toFixed(3)}, 
-                 1/{sumTFNs(result.criteriaGeometricMeans).l.toFixed(3)})</p>
-            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-purple-100">
+                  <tr className="bg-blue-100">
                     <th className="p-3 text-left border">Criterion</th>
                     <th className="p-3 text-center border">Geometric Mean</th>
-                    <th className="p-3 text-center border">Fuzzy Weight (l, m, u)</th>
+                    <th className="p-3 text-center border">Fuzzy Weight</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,23 +173,20 @@ export default function FAHPResultsDisplay({
           </div>
         )}
 
-        {/* Step 3: Crisp Weights */}
+        {/* Step 3 */}
         {currentStep === 3 && (
           <div>
             <h3 className="text-lg font-semibold mb-4 text-gray-800">
               Step 4: Defuzzified & Normalized Criteria Weights
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Defuzzify using Center of Area: wᵢ = (l + m + u) / 3, then normalize.
-            </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-purple-100">
+                  <tr className="bg-blue-100">
                     <th className="p-3 text-left border">Criterion</th>
                     <th className="p-3 text-center border">Fuzzy Weight</th>
-                    <th className="p-3 text-center border">Crisp Weight</th>
-                    <th className="p-3 text-center border">Normalized Weight</th>
+                    <th className="p-3 text-center border">Crisp</th>
+                    <th className="p-3 text-center border">Normalized</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -207,13 +196,15 @@ export default function FAHPResultsDisplay({
                       <td className="p-3 text-center border font-mono text-xs">
                         {formatTFN(result.fuzzyCriteriaWeights[i], 3)}
                       </td>
-                      <td className="p-3 text-center border">{result.crispCriteriaWeights[i].toFixed(4)}</td>
-                      <td className="p-3 text-center border font-semibold text-purple-600">
+                      <td className="p-3 text-center border">
+                        {result.crispCriteriaWeights[i].toFixed(4)}
+                      </td>
+                      <td className="p-3 text-center border font-semibold text-blue-600">
                         {result.normalizedCriteriaWeights[i].toFixed(4)}
                       </td>
                     </tr>
                   ))}
-                  <tr className="bg-purple-100 font-semibold">
+                  <tr className="bg-blue-100 font-semibold">
                     <td className="p-3 border">Total</td>
                     <td className="p-3 border"></td>
                     <td className="p-3 text-center border">
@@ -223,27 +214,6 @@ export default function FAHPResultsDisplay({
                   </tr>
                 </tbody>
               </table>
-            </div>
-            {/* Bar Chart */}
-            <div className="mt-6">
-              <h4 className="font-medium text-gray-700 mb-3">Criteria Weight Distribution</h4>
-              <div className="space-y-2">
-                {criteria.map((c, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="w-32 text-sm text-gray-600 truncate">{c}</span>
-                    <div className="flex-1 bg-gray-200 rounded-full h-6">
-                      <div
-                        className="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2"
-                        style={{ width: `${result.normalizedCriteriaWeights[i] * 100}%` }}
-                      >
-                        <span className="text-xs text-white font-medium">
-                          {(result.normalizedCriteriaWeights[i] * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         )}
@@ -261,7 +231,7 @@ export default function FAHPResultsDisplay({
                   onClick={() => setSelectedCriterion(i)}
                   className={`px-3 py-2 rounded-lg text-sm ${
                     selectedCriterion === i
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-blue-600 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 >
@@ -272,7 +242,7 @@ export default function FAHPResultsDisplay({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-purple-100">
+                  <tr className="bg-blue-100">
                     <th className="p-3 text-left border"></th>
                     {alternatives.map((a, i) => (
                       <th key={i} className="p-3 text-center border min-w-[130px]">{a}</th>
@@ -282,9 +252,9 @@ export default function FAHPResultsDisplay({
                 <tbody>
                   {alternatives.map((a, i) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="p-3 font-medium border bg-purple-50">{a}</td>
+                      <td className="p-3 font-medium border bg-blue-50">{a}</td>
                       {result.fuzzyAlternativeMatrices[selectedCriterion][i].map((tfn, j) => (
-                        <td key={j} className={`p-3 text-center border font-mono text-xs ${i === j ? 'bg-purple-100' : ''}`}>
+                        <td key={j} className={`p-3 text-center border font-mono text-xs ${i === j ? 'bg-blue-100' : ''}`}>
                           {formatTFN(tfn)}
                         </td>
                       ))}
@@ -305,7 +275,7 @@ export default function FAHPResultsDisplay({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-purple-100">
+                  <tr className="bg-blue-100">
                     <th className="p-3 text-left border">Alternative</th>
                     {criteria.map((c, i) => (
                       <th key={i} className="p-3 text-center border">{c}</th>
@@ -344,18 +314,18 @@ export default function FAHPResultsDisplay({
             <div className="overflow-x-auto mb-6">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-purple-100">
+                  <tr className="bg-blue-100">
                     <th className="p-3 text-left border">Alternative</th>
                     {criteria.map((c, i) => (
                       <th key={i} className="p-3 text-center border text-xs">
                         {c}<br/>
-                        <span className="text-purple-600">
+                        <span className="text-blue-600">
                           (w={result.normalizedCriteriaWeights[i].toFixed(3)})
                         </span>
                       </th>
                     ))}
-                    <th className="p-3 text-center border bg-purple-200">Final Score</th>
-                    <th className="p-3 text-center border bg-purple-200">Rank</th>
+                    <th className="p-3 text-center border bg-blue-200">Final Score</th>
+                    <th className="p-3 text-center border bg-blue-200">Rank</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -367,7 +337,7 @@ export default function FAHPResultsDisplay({
                           {result.normalizedAlternativeWeights[cIdx][aIdx].toFixed(4)}
                         </td>
                       ))}
-                      <td className="p-3 text-center border font-semibold bg-purple-50">
+                      <td className="p-3 text-center border font-semibold bg-blue-50">
                         {result.finalScores[aIdx].toFixed(4)}
                       </td>
                       <td className={`p-3 text-center border font-bold ${
@@ -391,7 +361,7 @@ export default function FAHPResultsDisplay({
                   <div className="flex-1 bg-gray-200 rounded-full h-8">
                     <div
                       className={`h-8 rounded-full flex items-center justify-end pr-2 ${
-                        result.rankings[i] === 1 ? 'bg-green-500' : 'bg-purple-600'
+                        result.rankings[i] === 1 ? 'bg-green-500' : 'bg-blue-600'
                       }`}
                       style={{ width: `${result.finalScores[i] * 100}%` }}
                     >
@@ -410,10 +380,11 @@ export default function FAHPResultsDisplay({
             </div>
           </div>
         )}
+
       </div>
 
       {/* Actions */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mt-8">
         <button
           onClick={onReset}
           className="px-8 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
