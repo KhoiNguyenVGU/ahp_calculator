@@ -169,7 +169,7 @@ export default function CandidateComparison({
             onClick={() => setShowAllCandidates(!showAllCandidates)}
             className="px-6 py-2 bg-white hover:bg-blue-50 border-2 border-blue-300 text-blue-700 font-semibold rounded-lg transition-colors"
           >
-            {showAllCandidates ? '▲' : '▼'} {showAllCandidates ? 'Show Top 15 Only' : `Show All Candidates (${ranked.length - 15} more)`}
+            {showAllCandidates ? '▲' : '▼'} {showAllCandidates ? 'Collapse' : `Show All Candidates (${ranked.length - 15} more)`}
           </button>
         </div>
       )}

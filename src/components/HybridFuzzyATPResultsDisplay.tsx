@@ -147,7 +147,7 @@ export default function HybridFuzzyATPResultsDisplay({
                   onClick={() => setShowAllCandidates(!showAllCandidates)}
                   className="px-6 py-2 bg-white hover:bg-purple-50 border-2 border-purple-300 text-purple-700 font-semibold rounded-lg transition-colors"
                 >
-                  {showAllCandidates ? '▲' : '▼'} {showAllCandidates ? 'Show Top 15 Only' : `Show All Candidates (${sortedAlternatives.length - 15} more)`}
+                  {showAllCandidates ? '▲' : '▼'} {showAllCandidates ? 'Collapse' : `Show All Candidates (${sortedAlternatives.length - 15} more)`}
                 </button>
               </div>
             )}
