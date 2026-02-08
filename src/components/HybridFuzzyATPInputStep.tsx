@@ -258,7 +258,7 @@ export default function HybridFuzzyATPInputStep({
             </div>
 
             <div className="space-y-3">
-              {alternatives.map((alt, index) => (
+              {alternatives.slice(0, showAllCandidates ? alternatives.length : 15).map((alt, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <span className="w-8 text-center text-gray-500 font-medium">
                     {index + 1}.
@@ -281,6 +281,18 @@ export default function HybridFuzzyATPInputStep({
                 </div>
               ))}
             </div>
+            
+            {/* Show More/Less Button */}
+            {alternatives.length > 15 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setShowAllCandidates(!showAllCandidates)}
+                  className="px-6 py-2 bg-white hover:bg-blue-50 border-2 border-blue-300 text-blue-700 font-semibold rounded-lg transition-colors"
+                >
+                  {showAllCandidates ? '▲' : '▼'} {showAllCandidates ? 'Collapse' : `Show All Candidates (${alternatives.length - 15} more)`}
+                </button>
+              </div>
+            )}
           </div>
 
         </div>

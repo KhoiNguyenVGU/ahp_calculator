@@ -211,7 +211,7 @@ export default function QuickScoringInput({
           >
             {showAllRows ? (
               <>
-                ▲ Show Less (hiding {alternatives.length - 15} candidates)
+                ▲ Collapse
               </>
             ) : (
               <>
