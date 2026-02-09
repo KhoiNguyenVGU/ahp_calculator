@@ -26,6 +26,8 @@ export default function HybridFuzzyATPResultsDisplay({
   const [expandedSection, setExpandedSection] = useState<string>('summary');
   const [viewMode, setViewMode] = useState<'ranking' | 'comparison'>('ranking');
   const [showAllCandidates, setShowAllCandidates] = useState(false);
+  const [showAllDistanceMeasures, setShowAllDistanceMeasures] = useState(false);
+  const [showAllPerformanceData, setShowAllPerformanceData] = useState(false);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? '' : section);
@@ -283,7 +285,7 @@ export default function HybridFuzzyATPResultsDisplay({
                       </tr>
                     </thead>
                     <tbody>
-                      {alternatives.map((alt, i) => (
+                      {alternatives.slice(0, showAllDistanceMeasures ? alternatives.length : 15).map((alt, i) => (
                         <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                           <td className="border border-gray-300 px-4 py-2 font-semibold">
                             {alt}
@@ -305,6 +307,18 @@ export default function HybridFuzzyATPResultsDisplay({
                     </tbody>
                   </table>
                 </div>
+                
+                {/* Show More/Less Button for Distance Measures */}
+                {alternatives.length > 15 && (
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setShowAllDistanceMeasures(!showAllDistanceMeasures)}
+                      className="px-6 py-2 bg-white hover:bg-cyan-50 border-2 border-cyan-300 text-cyan-700 font-semibold rounded-lg transition-colors"
+                    >
+                      {showAllDistanceMeasures ? '▲' : '▼'} {showAllDistanceMeasures ? 'Collapse' : `Show All Candidates (${alternatives.length - 15} more)`}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Performance Data */}
@@ -328,7 +342,7 @@ export default function HybridFuzzyATPResultsDisplay({
                       </tr>
                     </thead>
                     <tbody>
-                      {alternatives.map((alt, i) => (
+                      {alternatives.slice(0, showAllPerformanceData ? alternatives.length : 15).map((alt, i) => (
                         <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                           <td className="border border-gray-300 px-4 py-2 font-semibold">
                             {alt}
@@ -343,6 +357,18 @@ export default function HybridFuzzyATPResultsDisplay({
                     </tbody>
                   </table>
                 </div>
+                
+                {/* Show More/Less Button for Performance Data */}
+                {alternatives.length > 15 && (
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setShowAllPerformanceData(!showAllPerformanceData)}
+                      className="px-6 py-2 bg-white hover:bg-cyan-50 border-2 border-cyan-300 text-cyan-700 font-semibold rounded-lg transition-colors"
+                    >
+                      {showAllPerformanceData ? '▲' : '▼'} {showAllPerformanceData ? 'Collapse' : `Show All Candidates (${alternatives.length - 15} more)`}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
