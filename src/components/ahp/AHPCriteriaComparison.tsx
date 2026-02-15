@@ -18,98 +18,99 @@ export default function CriteriaComparison({
   onNext,
   onBack,
 }: CriteriaComparisonProps) {
-  const handleCellChange = (i: number, j: number, value: string) => {
+  const handlePairChange = (i: number, j: number, value: string) => {
     const newMatrix = criteriaMatrix.map((row) => [...row]);
     newMatrix[i][j] = value;
+    // Set reciprocal in the lower triangle
+    newMatrix[j][i] = value === '1' ? '1' : value.startsWith('1/') ? value.substring(2) : `1/${value}`;
     setCriteriaMatrix(newMatrix);
   };
 
-  const getInverseDisplay = (value: string): string => {
-    if (!value || value === '1') return '1';
-    if (value.startsWith('1/')) {
-      return value.substring(2);
+  // Generate unique pairs (only upper triangle)
+  const getPairs = () => {
+    const pairs = [];
+    for (let i = 0; i < criteria.length; i++) {
+      for (let j = i + 1; j < criteria.length; j++) {
+        pairs.push({ i, j, first: criteria[i], second: criteria[j] });
+      }
     }
-    return `1/${value}`;
+    return pairs;
   };
 
+  const pairs = getPairs();
+  const canProceed = pairs.every(p => criteriaMatrix[p.i][p.j] && criteriaMatrix[p.i][p.j] !== '');
+
   return (
-    <div className="card max-w-5xl mx-auto">
+    <div className="card max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">Compare Criteria</h2>
       <p className="text-gray-600 mb-6">
-        Compare each pair of criteria. Ask: "How much more important is the row criterion
-        compared to the column criterion?"
+        Compare each pair of criteria by selecting how important one is compared to the other.
       </p>
 
       {/* Saaty Scale Reference */}
       <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-        <h3 className="text-sm font-medium text-blue-800 mb-2">Saaty Scale Reference</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-          <span>1 = Equal</span>
-          <span>3 = Moderate</span>
-          <span>5 = Strong</span>
-          <span>7 = Very Strong</span>
-          <span>9 = Extreme</span>
-          <span>1/3, 1/5, etc. = Inverse</span>
+        <h3 className="text-sm font-medium text-blue-800 mb-3">Scale Reference</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+          <div>
+            <strong className="text-blue-900">1</strong> = Equal importance
+          </div>
+          <div>
+            <strong className="text-blue-900">3</strong> = Moderate importance
+          </div>
+          <div>
+            <strong className="text-blue-900">5</strong> = Strong importance
+          </div>
+          <div>
+            <strong className="text-blue-900">7</strong> = Very strong importance
+          </div>
+          <div>
+            <strong className="text-blue-900">9</strong> = Extreme importance
+          </div>
+          <div>
+            <strong className="text-blue-900">1/3–1/9</strong> = Reverse (less important)
+          </div>
         </div>
       </div>
 
-      {/* Comparison Matrix */}
-      <div className="overflow-x-auto mb-6">
-        <table className="mx-auto border-collapse">
-          <thead>
-            <tr>
-              <th className="p-2 text-sm font-medium text-gray-700"></th>
-              {criteria.map((c, i) => (
-                <th key={i} className="p-2 text-sm font-medium text-gray-700 text-center">
-                  {c}
-                </th>
+      {/* Pairwise Comparisons */}
+      <div className="space-y-4 mb-6">
+        {pairs.map((pair, idx) => (
+          <div key={`${pair.i}-${pair.j}`} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <div className="mb-3">
+              <p className="text-gray-800 font-medium">
+                <span className="text-blue-600 font-semibold">{pair.first}</span> compared to{' '}
+                <span className="text-orange-600 font-semibold">{pair.second}</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Question: How important is <strong>{pair.first}</strong> relative to{' '}
+                <strong>{pair.second}</strong>?
+              </p>
+            </div>
+            <select
+              value={criteriaMatrix[pair.i][pair.j] || ''}
+              onChange={(e) => handlePairChange(pair.i, pair.j, e.target.value)}
+              className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">-- Select importance --</option>
+              {saatyScale.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.value}
+                </option>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {criteria.map((rowCriterion, i) => (
-              <tr key={i}>
-                <td className="p-2 text-sm font-medium text-gray-700">{rowCriterion}</td>
-                {criteria.map((_, j) => (
-                  <td key={j} className="p-1">
-                    {i === j ? (
-                      <div className="w-20 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-500">
-                        1
-                      </div>
-                    ) : i < j ? (
-                      <select
-                        value={criteriaMatrix[i][j]}
-                        onChange={(e) => handleCellChange(i, j, e.target.value)}
-                        className="matrix-cell"
-                      >
-                        {saatyScale.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.value}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="w-20 h-10 flex items-center justify-center bg-gray-50 rounded text-gray-500 text-sm">
-                        {getInverseDisplay(criteriaMatrix[j][i])}
-                      </div>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </select>
+            {idx < pairs.length - 1 && <div className="mt-3 border-t border-gray-300" />}
+          </div>
+        ))}
       </div>
 
       {/* Instructions */}
       <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
-        <h3 className="text-sm font-medium text-yellow-800 mb-2">How to fill the matrix</h3>
+        <h3 className="text-sm font-medium text-yellow-800 mb-2">💡 Tips</h3>
         <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
-          <li>Only fill the upper triangle (above the diagonal)</li>
-          <li>The diagonal is always 1 (element compared to itself)</li>
-          <li>Lower triangle is automatically calculated as reciprocal</li>
-          <li>If row is more important than column, use 1-9</li>
-          <li>If column is more important than row, use 1/2 - 1/9</li>
+          <li>Think about which criterion is more important for your decision</li>
+          <li>Use the scale: 1 (equal) → 3, 5, 7, 9 (increasingly important) → 1/3–1/9 (less important)</li>
+          <li>If the first is less important, select values like 1/3, 1/5, etc.</li>
+          <li>Take your time — there are no right or wrong answers, just your preferences</li>
         </ul>
       </div>
 
@@ -117,7 +118,7 @@ export default function CriteriaComparison({
         <button onClick={onBack} className="btn-secondary">
           ← Back
         </button>
-        <button onClick={onNext} className="btn-primary">
+        <button onClick={onNext} disabled={!canProceed} className="btn-primary">
           Next: Compare Alternatives →
         </button>
       </div>

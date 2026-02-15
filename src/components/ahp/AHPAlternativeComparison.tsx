@@ -22,7 +22,7 @@ export default function AlternativeComparison({
 }: AlternativeComparisonProps) {
   const [currentCriterion, setCurrentCriterion] = useState(0);
 
-  const handleCellChange = (
+  const handlePairChange = (
     criterionIndex: number,
     i: number,
     j: number,
@@ -32,19 +32,30 @@ export default function AlternativeComparison({
       matrix.map((row) => [...row])
     );
     newMatrices[criterionIndex][i][j] = value;
+    // Set reciprocal in the lower triangle
+    newMatrices[criterionIndex][j][i] = value === '1' ? '1' : value.startsWith('1/') ? value.substring(2) : `1/${value}`;
     setAlternativeMatrices(newMatrices);
   };
 
-  const getInverseDisplay = (value: string): string => {
-    if (!value || value === '1') return '1';
-    if (value.startsWith('1/')) {
-      return value.substring(2);
+  // Generate unique pairs for current criterion
+  const getPairs = () => {
+    const pairs = [];
+    for (let i = 0; i < alternatives.length; i++) {
+      for (let j = i + 1; j < alternatives.length; j++) {
+        pairs.push({ i, j, first: alternatives[i], second: alternatives[j] });
+      }
     }
-    return `1/${value}`;
+    return pairs;
   };
 
+  const pairs = getPairs();
+  const canProceed = pairs.every(
+    p => alternativeMatrices[currentCriterion][p.i][p.j] && 
+         alternativeMatrices[currentCriterion][p.i][p.j] !== ''
+  );
+
   return (
-    <div className="card max-w-5xl mx-auto">
+    <div className="card max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">Compare Alternatives</h2>
       <p className="text-gray-600 mb-6">
         For each criterion, compare how well each alternative performs.
@@ -67,60 +78,38 @@ export default function AlternativeComparison({
         ))}
       </div>
 
-      {/* Current Criterion Matrix */}
+      {/* Current Criterion Comparisons */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-700 mb-4">
-          Comparing alternatives with respect to:{' '}
+          Comparing alternatives for:{' '}
           <span className="text-blue-600">{criteria[currentCriterion]}</span>
         </h3>
 
-        <div className="overflow-x-auto">
-          <table className="mx-auto border-collapse">
-            <thead>
-              <tr>
-                <th className="p-2 text-sm font-medium text-gray-700"></th>
-                {alternatives.map((a, i) => (
-                  <th key={i} className="p-2 text-sm font-medium text-gray-700 text-center">
-                    {a}
-                  </th>
+        <div className="space-y-3">
+          {pairs.map((pair, idx) => (
+            <div key={`${pair.i}-${pair.j}`} className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="mb-2">
+                <p className="text-gray-800 font-medium">
+                  <span className="text-blue-600 font-semibold">{pair.first}</span> compared to{' '}
+                  <span className="text-orange-600 font-semibold">{pair.second}</span>
+                </p>
+              </div>
+              <select
+                value={alternativeMatrices[currentCriterion][pair.i][pair.j] || ''}
+                onChange={(e) =>
+                  handlePairChange(currentCriterion, pair.i, pair.j, e.target.value)
+                }
+                className="w-full md:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                <option value="">-- Select --</option>
+                {saatyScale.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.value}
+                  </option>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {alternatives.map((rowAlt, i) => (
-                <tr key={i}>
-                  <td className="p-2 text-sm font-medium text-gray-700">{rowAlt}</td>
-                  {alternatives.map((_, j) => (
-                    <td key={j} className="p-1">
-                      {i === j ? (
-                        <div className="w-20 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-500">
-                          1
-                        </div>
-                      ) : i < j ? (
-                        <select
-                          value={alternativeMatrices[currentCriterion][i][j]}
-                          onChange={(e) =>
-                            handleCellChange(currentCriterion, i, j, e.target.value)
-                          }
-                          className="matrix-cell"
-                        >
-                          {saatyScale.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.value}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="w-20 h-10 flex items-center justify-center bg-gray-50 rounded text-gray-500 text-sm">
-                          {getInverseDisplay(alternativeMatrices[currentCriterion][j][i])}
-                        </div>
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </select>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -140,6 +129,18 @@ export default function AlternativeComparison({
         </div>
       </div>
 
+      {/* Instructions */}
+      <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
+        <h3 className="text-sm font-medium text-yellow-800 mb-2">💡 How to Compare</h3>
+        <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+          <li>Use the scale 1–9 to rate which alternative is better for this criterion</li>
+          <li><strong>1</strong> = Both equally good</li>
+          <li><strong>3–5</strong> = First is moderately to strongly better</li>
+          <li><strong>7–9</strong> = First is very to extremely better</li>
+          <li>Use <strong>1/3–1/9</strong> if the second is better than the first</li>
+        </ul>
+      </div>
+
       {/* Navigation */}
       <div className="flex justify-between">
         <button onClick={onBack} className="btn-secondary">
@@ -151,18 +152,19 @@ export default function AlternativeComparison({
               onClick={() => setCurrentCriterion(currentCriterion - 1)}
               className="btn-secondary"
             >
-              Previous Criterion
+              ← Previous Criterion
             </button>
           )}
           {currentCriterion < criteria.length - 1 ? (
             <button
               onClick={() => setCurrentCriterion(currentCriterion + 1)}
+              disabled={!canProceed}
               className="btn-primary"
             >
               Next Criterion →
             </button>
           ) : (
-            <button onClick={onNext} className="btn-primary">
+            <button onClick={onNext} disabled={!canProceed} className="btn-primary">
               Calculate Results →
             </button>
           )}

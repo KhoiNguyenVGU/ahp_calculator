@@ -22,7 +22,7 @@ export default function FAHPInputStep({
   onNext,
 }: FAHPInputStepProps) {
   const addCriterion = () => {
-    setCriteria([...criteria, `Criterion ${criteria.length + 1}`]);
+    setCriteria([...criteria, '']);
   };
 
   const removeCriterion = (index: number) => {
@@ -38,7 +38,7 @@ export default function FAHPInputStep({
   };
 
   const addAlternative = () => {
-    setAlternatives([...alternatives, `Alternative ${alternatives.length + 1}`]);
+    setAlternatives([...alternatives, '']);
   };
 
   const removeAlternative = (index: number) => {
@@ -53,9 +53,12 @@ export default function FAHPInputStep({
     setAlternatives(newAlternatives);
   };
 
-  const canProceed = String(goal || '').trim() !== '' && 
-    criteria.every(c => String(c || '').trim() !== '') && 
-    alternatives.every(a => String(a || '').trim() !== '');
+  const canProceed =
+    String(goal || '').trim() !== '' &&
+    criteria.every((c) => String(c || '').trim() !== '') &&
+    alternatives.every((a) => String(a || '').trim() !== '') &&
+    criteria.length >= 2 &&
+    alternatives.length >= 2;
 
   return (
     <div className="card max-w-3xl mx-auto">
@@ -85,7 +88,7 @@ export default function FAHPInputStep({
           type="text"
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
-          placeholder="Enter your decision goal"
+          placeholder="e.g., Satisfaction with School"
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -103,7 +106,7 @@ export default function FAHPInputStep({
                 type="text"
                 value={criterion}
                 onChange={(e) => updateCriterion(index, e.target.value)}
-                placeholder={`Criterion ${index + 1}`}
+                placeholder={`Criterion ${index + 1} (e.g., Learning, Friends, etc.)`}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {criteria.length > 2 && (
@@ -132,7 +135,7 @@ export default function FAHPInputStep({
                 type="text"
                 value={alternative}
                 onChange={(e) => updateAlternative(index, e.target.value)}
-                placeholder={`Alternative ${index + 1}`}
+                placeholder={`Alternative ${index + 1} (e.g., School A, School B, etc.)`}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {alternatives.length > 2 && (

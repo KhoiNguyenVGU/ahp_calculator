@@ -46,7 +46,9 @@ export default function FAHPCriteriaComparison({
   const isComplete = () => {
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
-        if (!criteriaMatrix[i][j]) return false;
+        const val = criteriaMatrix[i][j];
+        // Value must be explicitly set (not undefined, null, or empty)
+        if (val === undefined || val === null || val === '') return false;
       }
     }
     return true;

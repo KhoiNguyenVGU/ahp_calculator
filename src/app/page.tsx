@@ -57,8 +57,8 @@ export default function Home() {
   // FAHP State
   const [fahpStep, setFahpStep] = useState(0);
   const [fahpGoal, setFahpGoal] = useState('');
-  const [fahpCriteria, setFahpCriteria] = useState<string[]>(['Criterion 1', 'Criterion 2']);
-  const [fahpAlternatives, setFahpAlternatives] = useState<string[]>(['Alternative 1', 'Alternative 2']);
+  const [fahpCriteria, setFahpCriteria] = useState<string[]>(['', '']);
+  const [fahpAlternatives, setFahpAlternatives] = useState<string[]>(['', '']);
   const [fahpCriteriaMatrix, setFahpCriteriaMatrix] = useState<string[][]>([]);
   const [fahpAlternativeMatrices, setFahpAlternativeMatrices] = useState<string[][][]>([]);
   const [fahpResults, setFahpResults] = useState<FAHPResult | null>(null);
@@ -78,8 +78,8 @@ export default function Home() {
   // Hybrid Fuzzy AHP-TOPSIS State
   const [hybridStep, setHybridStep] = useState(0);
   const [hybridGoal, setHybridGoal] = useState('');
-  const [hybridCriteria, setHybridCriteria] = useState<string[]>(['Criterion 1', 'Criterion 2']);
-  const [hybridAlternatives, setHybridAlternatives] = useState<string[]>(['Alternative 1', 'Alternative 2']);
+  const [hybridCriteria, setHybridCriteria] = useState<string[]>(['', '']);
+  const [hybridAlternatives, setHybridAlternatives] = useState<string[]>(['', '']);
   const [hybridCriteriaTypes, setHybridCriteriaTypes] = useState<('benefit' | 'cost')[]>(['benefit', 'benefit']);
   const [hybridCriteriaMatrix, setHybridCriteriaMatrix] = useState<string[][]>([]);
   const [hybridAlternativeDataMatrix, setHybridAlternativeDataMatrix] = useState<string[][]>([]);
@@ -324,8 +324,8 @@ export default function Home() {
   const handleFAHPRestart = () => {
     setFahpStep(0);
     setFahpGoal('');
-    setFahpCriteria(['Criterion 1', 'Criterion 2']);
-    setFahpAlternatives(['Alternative 1', 'Alternative 2']);
+    setFahpCriteria(['', '']);
+    setFahpAlternatives(['', '']);
     setFahpCriteriaMatrix([]);
     setFahpAlternativeMatrices([]);
     setFahpResults(null);
@@ -373,8 +373,8 @@ export default function Home() {
   const handleHybridRestart = () => {
     setHybridStep(0);
     setHybridGoal('');
-    setHybridCriteria(['Criterion 1', 'Criterion 2']);
-    setHybridAlternatives(['Alternative 1', 'Alternative 2']);
+    setHybridCriteria(['', '']);
+    setHybridAlternatives(['', '']);
     setHybridCriteriaTypes(['benefit', 'benefit']);
     setHybridCriteriaMatrix([]);
     setHybridAlternativeDataMatrix([]);
