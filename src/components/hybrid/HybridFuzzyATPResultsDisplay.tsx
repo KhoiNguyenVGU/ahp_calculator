@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { HybridFuzzyATPTopsisResult } from '@/utils/hybridFuzzyATPTopsis';
 import { TFN, formatTFN } from '@/utils/fahp';
 import { exportToCSV, exportToJSON, downloadFile, generateHTMLReport } from '@/utils/exportResults';
-import CandidateComparison from '@/components/CandidateComparison';
+import CandidateComparison from '@/components/hybrid/HybridFuzzyATPCandidateComparison';
 
 interface HybridFuzzyATPResultsDisplayProps {
   result: HybridFuzzyATPTopsisResult;

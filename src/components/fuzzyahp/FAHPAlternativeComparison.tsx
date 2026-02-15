@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { fahpSaatyScale, fuzzyScale, inverseTFN, formatTFN } from '../utils/fahp';
+import { fahpSaatyScale, fuzzyScale, inverseTFN, formatTFN } from '../../utils/fahp';
 
 interface FAHPAlternativeComparisonProps {
   criteria: string[];
