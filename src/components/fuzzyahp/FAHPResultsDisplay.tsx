@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FAHPResult, formatTFN, sumTFNs } from '../utils/fahp';
+import { FAHPResult, formatTFN, sumTFNs } from '../../utils/fahp';
 
 interface FAHPResultsDisplayProps {
   result: FAHPResult;

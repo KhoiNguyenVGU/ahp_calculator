@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { fahpSaatyScale, fuzzyScale, inverseTFN, formatTFN } from '../utils/fahp';
+import React, { useState, useEffect } from 'react';
+import { fahpSaatyScale, fuzzyScale, inverseTFN, formatTFN } from '../../utils/fahp';
 
 interface FAHPAlternativeComparisonProps {
   criteria: string[];
@@ -23,13 +23,25 @@ export default function FAHPAlternativeComparison({
   const [currentCriterion, setCurrentCriterion] = useState(0);
   const numAlternatives = alternatives.length;
 
-  const updateMatrix = (criterionIndex: number, i: number, j: number, value: string) => {
-    const newMatrices = alternativeMatrices.map(matrix => 
+  const updateMatrix = (
+    criterionIndex: number,
+    i: number,
+    j: number,
+    value: string
+  ) => {
+    const newMatrices = alternativeMatrices.map(matrix =>
       matrix.map(row => [...row])
     );
+
     newMatrices[criterionIndex][i][j] = value;
     setAlternativeMatrices(newMatrices);
+
+    // Mark this criterion as edited
+    const updatedEdited = [...editedCriteria];
+    updatedEdited[criterionIndex] = true;
+    setEditedCriteria(updatedEdited);
   };
+
 
   const getInverseValue = (value: string): string => {
     if (value === '1') return '1';
@@ -47,12 +59,13 @@ export default function FAHPAlternativeComparison({
     return formatTFN(tfn);
   };
 
-  // Check if current criterion's matrix is complete
+  // Check if current criterion's matrix is complete (only counts non-empty, non-default values)
   const isCurrentComplete = () => {
     const matrix = alternativeMatrices[currentCriterion];
     for (let i = 0; i < numAlternatives; i++) {
       for (let j = i + 1; j < numAlternatives; j++) {
-        if (!matrix[i][j]) return false;
+        const val = matrix[i][j];
+        if (!val || val === '') return false;
       }
     }
     return true;
@@ -64,14 +77,54 @@ export default function FAHPAlternativeComparison({
       const matrix = alternativeMatrices[c];
       for (let i = 0; i < numAlternatives; i++) {
         for (let j = i + 1; j < numAlternatives; j++) {
-          if (!matrix[i][j]) return false;
+          const val = matrix[i][j];
+          if (!val || val === '') return false;
         }
       }
     }
     return true;
   };
 
+  // Check if a specific criterion tab is complete
+  const isCriterionComplete = (criterionIndex: number) => {
+    if (!editedCriteria[criterionIndex]) return false;
+
+    const matrix = alternativeMatrices[criterionIndex];
+
+    for (let i = 0; i < numAlternatives; i++) {
+      for (let j = i + 1; j < numAlternatives; j++) {
+        const val = matrix[i][j];
+        if (!val || val === '') return false;
+      }
+    }
+
+    return true;
+  };
+
+
   const currentMatrix = alternativeMatrices[currentCriterion];
+
+  const [editedCriteria, setEditedCriteria] = useState<boolean[]>(
+    Array(criteria.length).fill(false)
+  );
+
+  // Mark current criterion as visited whenever it changes (covers Next/Previous navigation)
+  useEffect(() => {
+    setEditedCriteria(prev => {
+      if (prev[currentCriterion]) return prev;
+      const copy = [...prev];
+      copy[currentCriterion] = true;
+      return copy;
+    });
+  }, [currentCriterion]);
+
+  // Mark the first criterion as visited on mount (and reset when criteria length changes)
+  useEffect(() => {
+    const arr = Array(criteria.length).fill(false);
+    if (criteria.length > 0) arr[0] = true;
+    setEditedCriteria(arr);
+  }, [criteria.length]);
+
 
   return (
     <div className="space-y-6">
@@ -88,23 +141,25 @@ export default function FAHPAlternativeComparison({
       {/* Criterion Tabs */}
       <div className="flex flex-wrap gap-2">
         {criteria.map((criterion, index) => {
-          const matrix = alternativeMatrices[index];
-          let complete = true;
-          for (let i = 0; i < numAlternatives && complete; i++) {
-            for (let j = i + 1; j < numAlternatives && complete; j++) {
-              if (!matrix[i][j]) complete = false;
-            }
-          }
+          const complete = isCriterionComplete(index);
+          const visited = editedCriteria[index];
 
           return (
             <button
               key={index}
-              onClick={() => setCurrentCriterion(index)}
+              onClick={() => {
+                setCurrentCriterion(index);
+                const updated = [...editedCriteria];
+                updated[index] = true;
+                setEditedCriteria(updated);
+              }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 currentCriterion === index
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : complete
                   ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                  : visited
+                  ? 'bg-green-50 text-green-700 hover:bg-green-100'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -223,37 +278,40 @@ export default function FAHPAlternativeComparison({
       <div className="flex justify-between">
         <button
           onClick={onBack}
-          className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          className="btn-secondary"
         >
           ← Back
         </button>
 
         <div className="flex gap-3">
+          {currentCriterion > 0 && (
+            <button
+              onClick={() => setCurrentCriterion(currentCriterion - 1)}
+              className="btn-secondary"
+            >
+              ← Previous Criterion
+            </button>
+          )}
+
           {currentCriterion < criteria.length - 1 && (
             <button
               onClick={() => setCurrentCriterion(currentCriterion + 1)}
               disabled={!isCurrentComplete()}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                isCurrentComplete()
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+              className={`btn-primary ${!isCurrentComplete() && 'opacity-50 cursor-not-allowed'}`}
             >
               Next Criterion →
             </button>
           )}
 
-          <button
-            onClick={onCalculate}
-            disabled={!isAllComplete()}
-            className={`px-8 py-3 rounded-lg font-semibold transition-colors ${
-              isAllComplete()
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            Calculate Results →
-          </button>
+          {currentCriterion === criteria.length - 1 && (
+            <button
+              onClick={onCalculate}
+              disabled={!isAllComplete()}
+              className={`btn-primary ${!isAllComplete() && 'opacity-50 cursor-not-allowed'}`}
+            >
+              Calculate Results →
+            </button>
+          )}
         </div>
       </div>
     </div>

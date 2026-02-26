@@ -2,23 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import StepIndicator from '@/components/StepIndicator';
-import InputStep from '@/components/InputStep';
-import CriteriaComparison from '@/components/CriteriaComparison';
-import AlternativeComparison from '@/components/AlternativeComparison';
-import ResultsDisplay from '@/components/ResultsDisplay';
-import TOPSISInputStep from '@/components/TOPSISInputStep';
-import TOPSISWeightsStep from '@/components/TOPSISWeightsStep';
-import TOPSISResultsDisplay from '@/components/TOPSISResultsDisplay';
-import FAHPInputStep from '@/components/FAHPInputStep';
-import FAHPCriteriaComparison from '@/components/FAHPCriteriaComparison';
-import FAHPAlternativeComparison from '@/components/FAHPAlternativeComparison';
-import FAHPResultsDisplay from '@/components/FAHPResultsDisplay';
-import FuzzyTOPSISInputStep from '@/components/FuzzyTOPSISInputStep';
-import FuzzyTOPSISResultsDisplay from '@/components/FuzzyTOPSISResultsDisplay';
-import HybridFuzzyATPInputStep from '@/components/HybridFuzzyATPInputStep';
-import HybridFuzzyATPCriteriaComparison from '@/components/HybridFuzzyATPCriteriaComparison';
-import HybridFuzzyATPAlternativeData from '@/components/HybridFuzzyATPAlternativeData';
-import HybridFuzzyATPResultsDisplay from '@/components/HybridFuzzyATPResultsDisplay';
+import InputStep from '@/components/ahp/AHPInputStep';
+import CriteriaComparison from '@/components/ahp/AHPCriteriaComparison';
+import AlternativeComparison from '@/components/ahp/AHPAlternativeComparison';
+import ResultsDisplay from '@/components/ahp/AHPResultsDisplay';
+import TOPSISInputStep from '@/components/topsis/TOPSISInputStep';
+import TOPSISWeightsStep from '@/components/topsis/TOPSISWeightsStep';
+import TOPSISResultsDisplay from '@/components/topsis/TOPSISResultsDisplay';
+import FAHPInputStep from '@/components/fuzzyahp/FAHPInputStep';
+import FAHPCriteriaComparison from '@/components/fuzzyahp/FAHPCriteriaComparison';
+import FAHPAlternativeComparison from '@/components/fuzzyahp/FAHPAlternativeComparison';
+import FAHPResultsDisplay from '@/components/fuzzyahp/FAHPResultsDisplay';
+import FuzzyTOPSISInputStep from '@/components/fuzzytopsis/FuzzyTOPSISInputStep';
+import FuzzyTOPSISResultsDisplay from '@/components/fuzzytopsis/FuzzyTOPSISResultsDisplay';
+import HybridFuzzyATPInputStep from '@/components/hybrid/HybridFuzzyATPInputStep';
+import HybridFuzzyATPCriteriaComparison from '@/components/hybrid/HybridFuzzyATPCriteriaComparison';
+import HybridFuzzyATPAlternativeData from '@/components/hybrid/HybridFuzzyATPAlternativeData';
+import HybridFuzzyATPResultsDisplay from '@/components/hybrid/HybridFuzzyATPResultsDisplay';
 import { calculateAHP, AHPResult } from '@/utils/ahp';
 import { calculateTOPSIS, TOPSISResult } from '@/utils/topsis';
 import { calculateFAHP, FAHPResult } from '@/utils/fahp';
@@ -57,8 +57,8 @@ export default function Home() {
   // FAHP State
   const [fahpStep, setFahpStep] = useState(0);
   const [fahpGoal, setFahpGoal] = useState('');
-  const [fahpCriteria, setFahpCriteria] = useState<string[]>(['Criterion 1', 'Criterion 2']);
-  const [fahpAlternatives, setFahpAlternatives] = useState<string[]>(['Alternative 1', 'Alternative 2']);
+  const [fahpCriteria, setFahpCriteria] = useState<string[]>(['', '']);
+  const [fahpAlternatives, setFahpAlternatives] = useState<string[]>(['', '']);
   const [fahpCriteriaMatrix, setFahpCriteriaMatrix] = useState<string[][]>([]);
   const [fahpAlternativeMatrices, setFahpAlternativeMatrices] = useState<string[][][]>([]);
   const [fahpResults, setFahpResults] = useState<FAHPResult | null>(null);
@@ -78,8 +78,8 @@ export default function Home() {
   // Hybrid Fuzzy AHP-TOPSIS State
   const [hybridStep, setHybridStep] = useState(0);
   const [hybridGoal, setHybridGoal] = useState('');
-  const [hybridCriteria, setHybridCriteria] = useState<string[]>(['Criterion 1', 'Criterion 2']);
-  const [hybridAlternatives, setHybridAlternatives] = useState<string[]>(['Alternative 1', 'Alternative 2']);
+  const [hybridCriteria, setHybridCriteria] = useState<string[]>(['', '']);
+  const [hybridAlternatives, setHybridAlternatives] = useState<string[]>(['', '']);
   const [hybridCriteriaTypes, setHybridCriteriaTypes] = useState<('benefit' | 'cost')[]>(['benefit', 'benefit']);
   const [hybridCriteriaMatrix, setHybridCriteriaMatrix] = useState<string[][]>([]);
   const [hybridAlternativeDataMatrix, setHybridAlternativeDataMatrix] = useState<string[][]>([]);
@@ -324,8 +324,8 @@ export default function Home() {
   const handleFAHPRestart = () => {
     setFahpStep(0);
     setFahpGoal('');
-    setFahpCriteria(['Criterion 1', 'Criterion 2']);
-    setFahpAlternatives(['Alternative 1', 'Alternative 2']);
+    setFahpCriteria(['', '']);
+    setFahpAlternatives(['', '']);
     setFahpCriteriaMatrix([]);
     setFahpAlternativeMatrices([]);
     setFahpResults(null);
@@ -373,8 +373,8 @@ export default function Home() {
   const handleHybridRestart = () => {
     setHybridStep(0);
     setHybridGoal('');
-    setHybridCriteria(['Criterion 1', 'Criterion 2']);
-    setHybridAlternatives(['Alternative 1', 'Alternative 2']);
+    setHybridCriteria(['', '']);
+    setHybridAlternatives(['', '']);
     setHybridCriteriaTypes(['benefit', 'benefit']);
     setHybridCriteriaMatrix([]);
     setHybridAlternativeDataMatrix([]);

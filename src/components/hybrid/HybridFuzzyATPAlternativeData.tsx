@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import QuickScoringInput from '@/components/QuickScoringInput';
+import QuickScoringInput from '@/components/hybrid/HybridFuzzyATPQuickScoringInput';
 
 interface HybridFuzzyATPAlternativeDataProps {
   criteria: string[];
