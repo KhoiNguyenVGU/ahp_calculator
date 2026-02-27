@@ -109,4 +109,4 @@ vercel
 
 ## License
 
-This project only serves as education purposes and belongs to the property of the Vietnamese-German University (VGU)
+This project only serves for education purposes and belongs to the property of the Vietnamese-German University (VGU)
