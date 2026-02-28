@@ -75,12 +75,17 @@ export default function TOPSISInputStep({
     setDataMatrix(newMatrix);
   };
 
+  const isValidNumber = (value: string) => {
+    const trimmed = String(value || '').trim();
+    return trimmed !== '' && !isNaN(parseFloat(trimmed));
+  };
+
   const canProceed =
     criteria.every((c) => String(c || '').trim() !== '') &&
     alternatives.every((a) => String(a || '').trim() !== '') &&
     criteria.length >= 2 &&
     alternatives.length >= 2 &&
-    dataMatrix.every(row => row.every(cell => String(cell || '').trim() !== '' && !isNaN(parseFloat(String(cell || '0')))));
+    dataMatrix.every(row => row.every(cell => isValidNumber(cell)));
 
   return (
     <div className="card max-w-5xl mx-auto">
@@ -160,61 +165,66 @@ export default function TOPSISInputStep({
         </div>
       </div>
 
-      {/* Data Matrix Input */}
+      {/* Sentence-style Data Input */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Decision Matrix (Enter raw values)
+          Values
         </label>
-        <div className="overflow-x-auto">
-          <table className="border-collapse">
-            <thead>
-              <tr>
-                <th className="p-2 text-sm font-medium text-gray-700 bg-orange-100 border border-gray-300">
-                  Alternative
-                </th>
-                {criteria.map((c, i) => (
-                  <th key={i} className="p-2 text-sm font-medium text-gray-700 bg-blue-100 border border-gray-300 min-w-24">
-                    <div>{c || `C${i + 1}`}</div>
-                    <div className="text-xs text-gray-500">
-                      ({criteriaTypes[i] === 'benefit' ? 'Higher Better' : 'Lower Better'})
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {alternatives.map((alt, rowIndex) => (
-                <tr key={rowIndex}>
-                  <td className="p-2 text-sm font-medium text-gray-700 bg-orange-50 border border-gray-300">
-                    {alt || `A${rowIndex + 1}`}
-                  </td>
-                  {criteria.map((_, colIndex) => (
-                    <td key={colIndex} className="p-1 border border-gray-300">
-                      <input
-                        type="text"
-                        value={dataMatrix[rowIndex]?.[colIndex] || ''}
-                        onChange={(e) => updateDataCell(rowIndex, colIndex, e.target.value)}
-                        placeholder="0"
-                        className="w-full px-2 py-1 text-center border border-transparent rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      {/* Instructions */}
-      <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
-        <h3 className="text-sm font-medium text-yellow-800 mb-2">Instructions</h3>
-        <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
-          <li><strong>Higher Better:</strong> Higher values are better (e.g., quality, storage, camera)</li>
-          <li><strong>Lower Better:</strong> Lower values are better (e.g., price, weight)</li>
-          <li>Enter raw numerical values in the decision matrix</li>
-          <li>All cells must contain valid numbers</li>
-        </ul>
+        <div className="mb-4 p-4 bg-yellow-50 rounded-lg">
+          <h3 className="text-sm font-medium text-yellow-800 mb-2">Instructions</h3>
+          <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+            <li><strong>Higher Better:</strong> Higher values are better (e.g., quality, storage, camera)</li>
+            <li><strong>Lower Better:</strong> Lower values are better (e.g., price, weight)</li>
+            <li>Enter one numeric value for each sentence prompt</li>
+            <li>Use the same unit for each criterion (e.g., all prices in USD)</li>
+            <li>All cells must contain valid numbers</li>
+          </ul>
+        </div>
+
+        <div className="space-y-4">
+          {criteria.map((criterion, colIndex) => (
+            <div key={colIndex} className="p-4 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="mb-3">
+                <h4 className="text-sm font-semibold text-gray-800">
+                  {criterion || `Criterion ${colIndex + 1}`}
+                </h4>
+                <p className="text-xs text-gray-600 mt-1">
+                  {criteriaTypes[colIndex] === 'benefit'
+                    ? 'Benefit criterion: higher value means better performance.'
+                    : 'Cost criterion: lower value means better performance.'}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {alternatives.map((alternative, rowIndex) => {
+                  const value = dataMatrix[rowIndex]?.[colIndex] || '';
+                  const valid = isValidNumber(value);
+
+                  return (
+                    <div key={`${rowIndex}-${colIndex}`} className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:gap-3">
+                      <span className="text-gray-700 sm:w-10 sm:flex-none">For</span>
+                      <span className="font-semibold text-blue-700 sm:w-52 sm:flex-none sm:truncate">{alternative || `Alternative ${rowIndex + 1}`}</span>
+                      <span className="text-gray-700 sm:w-8 sm:flex-none">the</span>
+                      <span className="font-semibold text-gray-800 sm:w-44 sm:flex-none sm:truncate">{criterion || `criterion ${colIndex + 1}`}</span>
+                      <span className="text-gray-700 sm:w-16 sm:flex-none">value is</span>
+                      <input
+                        type="number"
+                        step="any"
+                        value={value}
+                        onChange={(e) => updateDataCell(rowIndex, colIndex, e.target.value)}
+                        placeholder="e.g. 75"
+                        className={`w-32 px-2 py-1 rounded border focus:outline-none focus:ring-2 focus:ring-blue-500 sm:flex-none ${
+                          valid ? 'border-gray-300 bg-white' : 'border-red-300 bg-red-50'
+                        }`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="flex justify-end">

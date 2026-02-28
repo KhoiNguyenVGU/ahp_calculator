@@ -14,6 +14,7 @@ import FAHPCriteriaComparison from '@/components/fuzzyahp/FAHPCriteriaComparison
 import FAHPAlternativeComparison from '@/components/fuzzyahp/FAHPAlternativeComparison';
 import FAHPResultsDisplay from '@/components/fuzzyahp/FAHPResultsDisplay';
 import FuzzyTOPSISInputStep from '@/components/fuzzytopsis/FuzzyTOPSISInputStep';
+import FuzzyTOPSISWeightsStep from '@/components/fuzzytopsis/FuzzyTOPSISWeightsStep';
 import FuzzyTOPSISResultsDisplay from '@/components/fuzzytopsis/FuzzyTOPSISResultsDisplay';
 import HybridFuzzyATPInputStep from '@/components/hybrid/HybridFuzzyATPInputStep';
 import HybridFuzzyATPCriteriaComparison from '@/components/hybrid/HybridFuzzyATPCriteriaComparison';
@@ -29,7 +30,7 @@ import { TFN } from '@/utils/fahp';
 const AHP_STEPS = ['Define Problem', 'Compare Criteria', 'Compare Alternatives', 'Results'];
 const TOPSIS_STEPS = ['Enter Data', 'Set Weights', 'Results'];
 const FAHP_STEPS = ['Define Problem', 'Compare Criteria', 'Compare Alternatives', 'Results'];
-const FUZZY_TOPSIS_STEPS = ['Define Problem & Weights', 'Results'];
+const FUZZY_TOPSIS_STEPS = ['Enter Data', 'Set Fuzzy Weights', 'Results'];
 const HYBRID_FUZZY_ATP_STEPS = ['Define Problem', 'Compare Criteria (Fuzzy AHP)', 'Enter Alternative Data (Fuzzy TOPSIS)', 'Results'];
 
 export default function Home() {
@@ -68,7 +69,11 @@ export default function Home() {
   const [fuzzyTopsisCriteria, setFuzzyTopsisCriteria] = useState<string[]>(['', '']);
   const [fuzzyTopsisAlternatives, setFuzzyTopsisAlternatives] = useState<string[]>(['', '']);
   const [fuzzyTopsisCriteriaTypes, setFuzzyTopsisCriteriaTypes] = useState<('benefit' | 'cost')[]>(['benefit', 'benefit']);
-  const [fuzzyTopsisDataMatrix, setFuzzyTopsisDataMatrix] = useState<string[][]>([['', ''], ['', '']]);
+  const emptyFuzzyValue = (): TFN => ({ l: Number.NaN, m: Number.NaN, u: Number.NaN });
+  const [fuzzyTopsisDataMatrix, setFuzzyTopsisDataMatrix] = useState<TFN[][]>([
+    [emptyFuzzyValue(), emptyFuzzyValue()],
+    [emptyFuzzyValue(), emptyFuzzyValue()],
+  ]);
   const [fuzzyTopsisWeights, setFuzzyTopsisWeights] = useState<TFN[]>([
     { l: 0.3, m: 0.5, u: 0.7 },
     { l: 0.3, m: 0.5, u: 0.7 },
@@ -201,14 +206,15 @@ export default function Home() {
   useEffect(() => {
     const numAlternatives = fuzzyTopsisAlternatives.length;
     const numCriteria = fuzzyTopsisCriteria.length;
-    const newMatrix: string[][] = Array(numAlternatives)
+    const newMatrix: TFN[][] = Array(numAlternatives)
       .fill(null)
-      .map(() => Array(numCriteria).fill(''));
+      .map(() => Array.from({ length: numCriteria }, () => emptyFuzzyValue()));
 
     for (let i = 0; i < Math.min(fuzzyTopsisDataMatrix.length, numAlternatives); i++) {
       for (let j = 0; j < Math.min(fuzzyTopsisDataMatrix[i].length, numCriteria); j++) {
-        if (fuzzyTopsisDataMatrix[i][j]) {
-          newMatrix[i][j] = fuzzyTopsisDataMatrix[i][j];
+        const cell = fuzzyTopsisDataMatrix[i][j];
+        if (cell) {
+          newMatrix[i][j] = { ...cell };
         }
       }
     }
@@ -333,11 +339,9 @@ export default function Home() {
 
   // Fuzzy TOPSIS calculate
   const handleFuzzyTOPSISCalculate = () => {
-    const rawMatrix = fuzzyTopsisDataMatrix.map(row => row.map(cell => parseFloat(cell)));
-    
-    const result = calculateFuzzyTOPSIS(rawMatrix, fuzzyTopsisWeights, fuzzyTopsisCriteriaTypes);
+    const result = calculateFuzzyTOPSIS(fuzzyTopsisDataMatrix, fuzzyTopsisWeights, fuzzyTopsisCriteriaTypes);
     setFuzzyTopsisResults(result);
-    setFuzzyTopsisStep(1);
+    setFuzzyTopsisStep(2);
   };
 
   const handleFuzzyTOPSISRestart = () => {
@@ -345,7 +349,10 @@ export default function Home() {
     setFuzzyTopsisCriteria(['', '']);
     setFuzzyTopsisAlternatives(['', '']);
     setFuzzyTopsisCriteriaTypes(['benefit', 'benefit']);
-    setFuzzyTopsisDataMatrix([['', ''], ['', '']]);
+    setFuzzyTopsisDataMatrix([
+      [emptyFuzzyValue(), emptyFuzzyValue()],
+      [emptyFuzzyValue(), emptyFuzzyValue()],
+    ]);
     setFuzzyTopsisWeights([
       { l: 0.3, m: 0.5, u: 0.7 },
       { l: 0.3, m: 0.5, u: 0.7 },
@@ -613,13 +620,21 @@ export default function Home() {
                 setCriteriaTypes={setFuzzyTopsisCriteriaTypes}
                 dataMatrix={fuzzyTopsisDataMatrix}
                 setDataMatrix={setFuzzyTopsisDataMatrix}
+                onNext={() => setFuzzyTopsisStep(1)}
+              />
+            )}
+
+            {fuzzyTopsisStep === 1 && (
+              <FuzzyTOPSISWeightsStep
+                criteria={fuzzyTopsisCriteria}
                 fuzzyWeights={fuzzyTopsisWeights}
                 setFuzzyWeights={setFuzzyTopsisWeights}
+                onBack={() => setFuzzyTopsisStep(0)}
                 onNext={handleFuzzyTOPSISCalculate}
               />
             )}
 
-            {fuzzyTopsisStep === 1 && fuzzyTopsisResults && (
+            {fuzzyTopsisStep === 2 && fuzzyTopsisResults && (
               <FuzzyTOPSISResultsDisplay
                 result={fuzzyTopsisResults}
                 criteria={fuzzyTopsisCriteria}

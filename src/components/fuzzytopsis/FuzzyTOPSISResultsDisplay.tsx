@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { FuzzyTOPSISResult } from '@/utils/fuzzyTopsis';
-import { TFN, formatTFN } from '@/utils/fahp';
+import { TFN } from '@/utils/fahp';
 import { formatFuzzyTFN } from '@/utils/fuzzyTopsis';
 
 interface FuzzyTOPSISResultsDisplayProps {
@@ -22,368 +22,327 @@ export default function FuzzyTOPSISResultsDisplay({
   fuzzyWeights,
   onReset,
 }: FuzzyTOPSISResultsDisplayProps) {
-  const [expandedSection, setExpandedSection] = useState<string>('summary');
+  const [showStep, setShowStep] = useState(0);
 
-  const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? '' : section);
-  };
+  const bestIndex = result.rankings.indexOf(1);
+  const bestScore = result.performanceScores[bestIndex];
 
-  // Sort alternatives by ranking for display
-  const sortedAlternatives = alternatives
+  const ranking = alternatives
     .map((alt, index) => ({
       name: alt,
       score: result.performanceScores[index],
       rank: result.rankings[index],
-      distance_best: result.crispDistanceFromBest[index],
-      distance_worst: result.crispDistanceFromWorst[index],
+      index,
     }))
     .sort((a, b) => a.rank - b.rank);
 
-  return (
-    <div className="card max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Fuzzy TOPSIS Results</h2>
-      <p className="text-gray-600 mb-6">
-        Decision analysis using Fuzzy Triangular Numbers with TOPSIS Method
-      </p>
+  const steps = [
+    'Raw Data',
+    'Normalized Matrix',
+    'Weighted Normalized',
+    'Ideal Values',
+    'Distances & Scores',
+    'Final Ranking',
+  ];
 
-      {/* Summary Card */}
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg p-6 mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Ranking Summary</h3>
-        <div className="space-y-3">
-          {sortedAlternatives.map((alt, index) => (
-            <div
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Winner Banner */}
+      <div className="card bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+        <div className="text-center">
+          <h2 className="text-xl mb-2">🏆 Best Alternative (Fuzzy TOPSIS)</h2>
+          <div className="text-4xl font-bold mb-2">{alternatives[bestIndex]}</div>
+          <div className="text-xl opacity-90">
+            Closeness Score: {bestScore.toFixed(6)}
+          </div>
+        </div>
+      </div>
+
+      {/* Step Navigation */}
+      <div className="card">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">Calculation Steps</h3>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {steps.map((step, index) => (
+            <button
               key={index}
-              className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm"
+              onClick={() => setShowStep(index)}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                showStep === index
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
-              <div className="flex items-center gap-4">
-                <div
-                  className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-white ${
-                    index === 0
-                      ? 'bg-yellow-500'
-                      : index === 1
-                        ? 'bg-gray-400'
-                        : index === 2
-                          ? 'bg-orange-400'
-                          : 'bg-blue-400'
-                  }`}
-                >
-                  {alt.rank}
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">{alt.name}</p>
-                  <p className="text-xs text-gray-500">
-                    Closeness Coefficient
-                  </p>
+              {index + 1}. {step}
+            </button>
+          ))}
+        </div>
+
+        {/* Step 1: Raw Data */}
+        {showStep === 0 && (
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-3">Step 1: Raw Decision Matrix</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-orange-100">
+                    <th className="border border-gray-300 p-2">Alternative</th>
+                    {criteria.map((c, i) => (
+                      <th key={i} className="border border-gray-300 p-2 bg-blue-100">
+                        {c}
+                        <div className="text-xs text-gray-500">
+                          ({criteriaTypes[i] === 'benefit' ? 'Higher Better' : 'Lower Better'})
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {alternatives.map((alt, i) => (
+                    <tr key={i}>
+                      <td className="border border-gray-300 p-2 font-medium bg-orange-50">{alt}</td>
+                      {criteria.map((_, j) => (
+                        <td key={j} className="border border-gray-300 p-2 text-center">
+                          {result.fuzzyMatrix[i][j].m.toFixed(4)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+              <strong>Note:</strong> Input values are crisp numbers represented as fuzzy numbers in the form (x, x, x).
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Normalized Matrix */}
+        {showStep === 1 && (
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-3">Step 2: Normalized Fuzzy Matrix</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-orange-100">Alternative</th>
+                    {criteria.map((c, i) => (
+                      <th key={i} className="border border-gray-300 p-2 bg-blue-100">{c}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {alternatives.map((alt, i) => (
+                    <tr key={i}>
+                      <td className="border border-gray-300 p-2 font-medium bg-orange-50">{alt}</td>
+                      {criteria.map((_, j) => (
+                        <td key={j} className="border border-gray-300 p-2 text-center font-mono text-xs">
+                          {formatFuzzyTFN(result.normalizedFuzzyMatrix[i][j], 3)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+              <strong>Formula:</strong> r̃ᵢⱼ = x̃ᵢⱼ / √(Σx²ᵢⱼ)
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Weighted Normalized Matrix */}
+        {showStep === 2 && (
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-3">Step 3: Weighted Normalized Fuzzy Matrix</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-orange-200">
+                    <th className="border border-gray-300 p-2">Fuzzy Weight →</th>
+                    {fuzzyWeights.map((w, i) => (
+                      <th key={i} className="border border-gray-300 p-2 text-center font-mono text-xs">
+                        {formatFuzzyTFN(w, 2)}
+                      </th>
+                    ))}
+                  </tr>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-orange-100">Alternative</th>
+                    {criteria.map((c, i) => (
+                      <th key={i} className="border border-gray-300 p-2 bg-blue-100">{c}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {alternatives.map((alt, i) => (
+                    <tr key={i}>
+                      <td className="border border-gray-300 p-2 font-medium bg-orange-50">{alt}</td>
+                      {criteria.map((_, j) => (
+                        <td key={j} className="border border-gray-300 p-2 text-center font-mono text-xs">
+                          {formatFuzzyTFN(result.weightedNormalizedFuzzyMatrix[i][j], 3)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+              <strong>Formula:</strong> ṽᵢⱼ = w̃ⱼ ⊗ r̃ᵢⱼ
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Ideal Values */}
+        {showStep === 3 && (
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-3">Step 4: Fuzzy Ideal Best (F⁺) and Fuzzy Ideal Worst (F⁻)</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-orange-100">Criterion</th>
+                    <th className="border border-gray-300 p-2 bg-green-100">F⁺ (Ideal Best)</th>
+                    <th className="border border-gray-300 p-2 bg-red-100">F⁻ (Ideal Worst)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {criteria.map((crit, j) => (
+                    <tr key={j}>
+                      <td className="border border-gray-300 p-2 font-medium bg-orange-50">{crit}</td>
+                      <td className="border border-gray-300 p-2 text-center font-mono text-green-700">
+                        {formatFuzzyTFN(result.idealBestFuzzy[j], 3)}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-center font-mono text-red-700">
+                        {formatFuzzyTFN(result.idealWorstFuzzy[j], 3)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+              <p><strong>F⁺ (Ideal Best):</strong> Benefit criterion uses highest value; cost criterion uses lowest value.</p>
+              <p><strong>F⁻ (Ideal Worst):</strong> Benefit criterion uses lowest value; cost criterion uses highest value.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Distances & Scores */}
+        {showStep === 4 && (
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-3">Step 5: Separation Distances & Closeness Scores</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-orange-100">Alternative</th>
+                    <th className="border border-gray-300 p-2 bg-blue-100">d⁺ (Distance from Best)</th>
+                    <th className="border border-gray-300 p-2 bg-blue-100">d⁻ (Distance from Worst)</th>
+                    <th className="border border-gray-300 p-2 bg-green-100">CC (Closeness Score)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alternatives.map((alt, i) => (
+                    <tr key={i} className={result.rankings[i] === 1 ? 'bg-green-50' : ''}>
+                      <td className="border border-gray-300 p-2 font-medium bg-orange-50">{alt}</td>
+                      <td className="border border-gray-300 p-2 text-center">{result.crispDistanceFromBest[i].toFixed(4)}</td>
+                      <td className="border border-gray-300 p-2 text-center">{result.crispDistanceFromWorst[i].toFixed(4)}</td>
+                      <td className="border border-gray-300 p-2 text-center font-bold text-green-700">
+                        {result.performanceScores[i].toFixed(6)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+              <p><strong>CCᵢ:</strong> d⁻ᵢ / (d⁺ᵢ + d⁻ᵢ) — higher score means better alternative.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Step 6: Final Ranking */}
+        {showStep === 5 && (
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-3">Step 6: Final Ranking</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 p-3 bg-orange-100">Alternative</th>
+                    <th className="border border-gray-300 p-3 bg-blue-100">Closeness Score (CCᵢ)</th>
+                    <th className="border border-gray-300 p-3 bg-green-100">Rank</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ranking.map((item) => (
+                    <tr key={item.index} className={item.rank === 1 ? 'bg-green-100' : ''}>
+                      <td className="border border-gray-300 p-3 font-medium">{item.name}</td>
+                      <td className="border border-gray-300 p-3 text-center">{item.score.toFixed(6)}</td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <span className={`px-3 py-1 rounded-full font-bold ${
+                          item.rank === 1 ? 'bg-green-500 text-white' :
+                          item.rank === 2 ? 'bg-gray-400 text-white' :
+                          item.rank === 3 ? 'bg-amber-500 text-white' :
+                          'bg-gray-200 text-gray-700'
+                        }`}>
+                          {item.rank}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Visual Ranking */}
+      <div className="card">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Final Rankings</h3>
+        <div className="space-y-3">
+          {ranking.map((item) => (
+            <div
+              key={item.index}
+              className={`flex items-center p-4 rounded-lg ${
+                item.rank === 1 ? 'bg-green-50 border-2 border-green-500' : 'bg-gray-50'
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold mr-4 ${
+                  item.rank === 1
+                    ? 'bg-green-500 text-white'
+                    : item.rank === 2
+                    ? 'bg-gray-400 text-white'
+                    : item.rank === 3
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-gray-300 text-gray-700'
+                }`}
+              >
+                {item.rank}
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-gray-800">{item.name}</div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                  <div
+                    className={`h-2 rounded-full ${item.rank === 1 ? 'bg-green-500' : 'bg-blue-500'}`}
+                    style={{ width: `${item.score * 100}%` }}
+                  />
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-purple-600">
-                  {alt.score.toFixed(4)}
-                </p>
-                <p className="text-xs text-gray-500">Score</p>
+              <div className="text-lg font-bold text-gray-700 ml-4">
+                {item.score.toFixed(4)}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Detailed Results */}
-      <div className="space-y-4">
-        {/* Input Data Section */}
-        <div className="border rounded-lg">
-          <button
-            onClick={() => toggleSection('input')}
-            className="w-full px-6 py-4 bg-blue-50 hover:bg-blue-100 flex justify-between items-center font-semibold text-gray-800 border-b transition-colors"
-          >
-            <span>📊 Input Data & Weights</span>
-            <span>{expandedSection === 'input' ? '▼' : '▶'}</span>
-          </button>
-          {expandedSection === 'input' && (
-            <div className="p-6 space-y-6">
-              {/* Input Matrix */}
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-3">Decision Matrix</h4>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="border border-gray-300 px-4 py-2 text-left font-semibold">
-                          Alternative
-                        </th>
-                        {criteria.map((crit, index) => (
-                          <th
-                            key={index}
-                            className="border border-gray-300 px-4 py-2 text-left font-semibold"
-                          >
-                            {crit}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {alternatives.map((alt, i) => (
-                        <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                          <td className="border border-gray-300 px-4 py-2 font-semibold">
-                            {alt}
-                          </td>
-                          {criteria.map((_, j) => (
-                            <td key={j} className="border border-gray-300 px-4 py-2">
-                              {result.fuzzyMatrix[i][j].m.toFixed(4)}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Fuzzy Weights */}
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-3">Fuzzy Criterion Weights</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {criteria.map((crit, index) => (
-                    <div
-                      key={index}
-                      className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4"
-                    >
-                      <h5 className="font-semibold text-gray-800 mb-2">{crit}</h5>
-                      <p className="text-sm text-gray-700 mb-2">
-                        <span className="font-semibold">Type:</span>{' '}
-                        {criteriaTypes[index] === 'benefit' ? '📈 Benefit' : '📉 Cost'}
-                      </p>
-                      <p className="text-sm text-gray-700 font-mono bg-white rounded px-2 py-1">
-                        {formatFuzzyTFN(fuzzyWeights[index], 3)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Normalized Matrix */}
-        <div className="border rounded-lg">
-          <button
-            onClick={() => toggleSection('normalized')}
-            className="w-full px-6 py-4 bg-green-50 hover:bg-green-100 flex justify-between items-center font-semibold text-gray-800 border-b transition-colors"
-          >
-            <span>📈 Normalized Fuzzy Matrix</span>
-            <span>{expandedSection === 'normalized' ? '▼' : '▶'}</span>
-          </button>
-          {expandedSection === 'normalized' && (
-            <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border border-gray-300 px-2 py-2 text-left font-semibold">
-                        Alternative
-                      </th>
-                      {criteria.map((crit, index) => (
-                        <th
-                          key={index}
-                          className="border border-gray-300 px-2 py-2 text-left font-semibold"
-                        >
-                          {crit}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {alternatives.map((alt, i) => (
-                      <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="border border-gray-300 px-2 py-2 font-semibold">
-                          {alt}
-                        </td>
-                        {criteria.map((_, j) => (
-                          <td
-                            key={j}
-                            className="border border-gray-300 px-2 py-2 font-mono"
-                          >
-                            {formatFuzzyTFN(
-                              result.normalizedFuzzyMatrix[i][j],
-                              2
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Weighted Normalized Matrix */}
-        <div className="border rounded-lg">
-          <button
-            onClick={() => toggleSection('weighted')}
-            className="w-full px-6 py-4 bg-orange-50 hover:bg-orange-100 flex justify-between items-center font-semibold text-gray-800 border-b transition-colors"
-          >
-            <span>⚖️ Weighted Normalized Fuzzy Matrix</span>
-            <span>{expandedSection === 'weighted' ? '▼' : '▶'}</span>
-          </button>
-          {expandedSection === 'weighted' && (
-            <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border border-gray-300 px-2 py-2 text-left font-semibold">
-                        Alternative
-                      </th>
-                      {criteria.map((crit, index) => (
-                        <th
-                          key={index}
-                          className="border border-gray-300 px-2 py-2 text-left font-semibold"
-                        >
-                          {crit}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {alternatives.map((alt, i) => (
-                      <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="border border-gray-300 px-2 py-2 font-semibold">
-                          {alt}
-                        </td>
-                        {criteria.map((_, j) => (
-                          <td
-                            key={j}
-                            className="border border-gray-300 px-2 py-2 font-mono"
-                          >
-                            {formatFuzzyTFN(
-                              result.weightedNormalizedFuzzyMatrix[i][j],
-                              3
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Ideal Values */}
-        <div className="border rounded-lg">
-          <button
-            onClick={() => toggleSection('ideal')}
-            className="w-full px-6 py-4 bg-cyan-50 hover:bg-cyan-100 flex justify-between items-center font-semibold text-gray-800 border-b transition-colors"
-          >
-            <span>🎯 Fuzzy Ideal Values (Best & Worst)</span>
-            <span>{expandedSection === 'ideal' ? '▼' : '▶'}</span>
-          </button>
-          {expandedSection === 'ideal' && (
-            <div className="p-6 space-y-4">
-              <div>
-                <h5 className="font-semibold text-gray-800 mb-3">
-                  Fuzzy Ideal Best (F⁺)
-                </h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {criteria.map((crit, index) => (
-                    <div
-                      key={index}
-                      className="bg-green-50 border border-green-200 rounded p-3"
-                    >
-                      <p className="text-sm font-semibold text-gray-800">
-                        {crit}
-                      </p>
-                      <p className="text-sm font-mono text-green-700 mt-1">
-                        {formatFuzzyTFN(result.idealBestFuzzy[index], 3)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h5 className="font-semibold text-gray-800 mb-3">
-                  Fuzzy Ideal Worst (F⁻)
-                </h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {criteria.map((crit, index) => (
-                    <div
-                      key={index}
-                      className="bg-red-50 border border-red-200 rounded p-3"
-                    >
-                      <p className="text-sm font-semibold text-gray-800">
-                        {crit}
-                      </p>
-                      <p className="text-sm font-mono text-red-700 mt-1">
-                        {formatFuzzyTFN(result.idealWorstFuzzy[index], 3)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Distances and Scores */}
-        <div className="border rounded-lg">
-          <button
-            onClick={() => toggleSection('distances')}
-            className="w-full px-6 py-4 bg-red-50 hover:bg-red-100 flex justify-between items-center font-semibold text-gray-800 border-b transition-colors"
-          >
-            <span>📏 Separation Distances & Closeness Scores</span>
-            <span>{expandedSection === 'distances' ? '▼' : '▶'}</span>
-          </button>
-          {expandedSection === 'distances' && (
-            <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">
-                        Alternative
-                      </th>
-                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">
-                        d⁺ (Dist. to Ideal Best)
-                      </th>
-                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">
-                        d⁻ (Dist. to Ideal Worst)
-                      </th>
-                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">
-                        CC (Closeness)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {alternatives.map((alt, i) => (
-                      <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="border border-gray-300 px-4 py-2 font-semibold">
-                          {alt}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 font-mono">
-                          {result.crispDistanceFromBest[i].toFixed(4)}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 font-mono">
-                          {result.crispDistanceFromWorst[i].toFixed(4)}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 font-bold text-purple-600">
-                          {result.performanceScores[i].toFixed(4)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-4 mt-8">
-        <button onClick={onReset} className="btn-secondary">
-          ← Start Over
+      {/* Restart Button */}
+      <div className="text-center">
+        <button onClick={onReset} className="btn-primary">
+          Start New Analysis
         </button>
       </div>
     </div>

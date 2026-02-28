@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { saatyScale } from '@/utils/ahp';
 
 interface AlternativeComparisonProps {
@@ -21,6 +21,9 @@ export default function AlternativeComparison({
   onBack,
 }: AlternativeComparisonProps) {
   const [currentCriterion, setCurrentCriterion] = useState(0);
+  const [editedCriteria, setEditedCriteria] = useState<boolean[]>(
+    Array(criteria.length).fill(false)
+  );
 
   const handlePairChange = (
     criterionIndex: number,
@@ -35,6 +38,10 @@ export default function AlternativeComparison({
     // Set reciprocal in the lower triangle
     newMatrices[criterionIndex][j][i] = value === '1' ? '1' : value.startsWith('1/') ? value.substring(2) : `1/${value}`;
     setAlternativeMatrices(newMatrices);
+
+    const updatedEdited = [...editedCriteria];
+    updatedEdited[criterionIndex] = true;
+    setEditedCriteria(updatedEdited);
   };
 
   // Generate unique pairs for current criterion
@@ -49,10 +56,34 @@ export default function AlternativeComparison({
   };
 
   const pairs = getPairs();
+
+  const isCriterionComplete = (criterionIndex: number) => {
+    if (!editedCriteria[criterionIndex]) return false;
+    return pairs.every(
+      p => alternativeMatrices[criterionIndex][p.i][p.j] &&
+           alternativeMatrices[criterionIndex][p.i][p.j] !== ''
+    );
+  };
+
   const canProceed = pairs.every(
     p => alternativeMatrices[currentCriterion][p.i][p.j] && 
          alternativeMatrices[currentCriterion][p.i][p.j] !== ''
   );
+
+  useEffect(() => {
+    setEditedCriteria(prev => {
+      if (prev[currentCriterion]) return prev;
+      const copy = [...prev];
+      copy[currentCriterion] = true;
+      return copy;
+    });
+  }, [currentCriterion]);
+
+  useEffect(() => {
+    const arr = Array(criteria.length).fill(false);
+    if (criteria.length > 0) arr[0] = true;
+    setEditedCriteria(arr);
+  }, [criteria.length]);
 
   return (
     <div className="card max-w-3xl mx-auto">
@@ -63,19 +94,34 @@ export default function AlternativeComparison({
 
       {/* Criterion Tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {criteria.map((criterion, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentCriterion(index)}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              currentCriterion === index
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {criterion}
-          </button>
-        ))}
+        {criteria.map((criterion, index) => {
+          const complete = isCriterionComplete(index);
+          const visited = editedCriteria[index];
+
+          return (
+            <button
+              key={index}
+              onClick={() => {
+                setCurrentCriterion(index);
+                const updated = [...editedCriteria];
+                updated[index] = true;
+                setEditedCriteria(updated);
+              }}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                currentCriterion === index
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : complete
+                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                  : visited
+                  ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {criterion}
+              {complete && currentCriterion !== index && ' ✓'}
+            </button>
+          );
+        })}
       </div>
 
       {/* Current Criterion Comparisons */}

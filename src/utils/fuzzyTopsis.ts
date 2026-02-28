@@ -226,13 +226,31 @@ export function calculateFuzzyRankings(performanceScores: number[]): number[] {
 }
 
 // Main Fuzzy TOPSIS calculation function
+function isTFNCell(value: unknown): value is TFN {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'l' in value &&
+    'm' in value &&
+    'u' in value
+  );
+}
+
+function toFuzzyMatrix(matrix: number[][] | TFN[][]): TFN[][] {
+  const firstCell = matrix?.[0]?.[0];
+  if (isTFNCell(firstCell)) {
+    return matrix as TFN[][];
+  }
+  return convertToFuzzyMatrix(matrix as number[][]);
+}
+
 export function calculateFuzzyTOPSIS(
-  rawMatrix: number[][],
+  rawMatrix: number[][] | TFN[][],
   fuzzyWeights: TFN[],
   criteriaTypes: ('benefit' | 'cost')[]
 ): FuzzyTOPSISResult {
-  // Step 1: Convert crisp matrix to fuzzy
-  const fuzzyMatrix = convertToFuzzyMatrix(rawMatrix);
+  // Step 1: Use provided fuzzy matrix directly, or convert crisp matrix to fuzzy
+  const fuzzyMatrix = toFuzzyMatrix(rawMatrix);
 
   // Step 2: Normalize fuzzy matrix
   const normalizedFuzzyMatrix = normalizeFuzzyMatrix(fuzzyMatrix);

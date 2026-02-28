@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface TOPSISWeightsStepProps {
   criteria: string[];
@@ -17,20 +17,84 @@ export default function TOPSISWeightsStep({
   onNext,
   onBack,
 }: TOPSISWeightsStepProps) {
-  const updateWeight = (index: number, value: string) => {
-    const newWeights = [...weights];
-    newWeights[index] = value;
-    setWeights(newWeights);
+  const formatPercent = (value: number) => {
+    const fixed = value.toFixed(2);
+    return fixed.replace(/\.00$/, '').replace(/(\.\d*[1-9])0$/, '$1');
+  };
+
+  const [percentInputs, setPercentInputs] = useState<string[]>([]);
+
+  useEffect(() => {
+    const mapped = criteria.map((_, index) => {
+      const weight = parseFloat(String(weights[index] || ''));
+      if (isNaN(weight)) return '';
+      return formatPercent(weight * 100);
+    });
+    setPercentInputs(mapped);
+  }, [criteria, weights]);
+
+  const parsePercent = (value: string): number | null => {
+    const trimmed = String(value || '').trim();
+    if (trimmed === '') return null;
+    const parsed = parseFloat(trimmed);
+    if (isNaN(parsed) || parsed < 0) return null;
+    return parsed;
+  };
+
+  const syncDecimalWeights = (percents: string[]) => {
+    const decimalWeights = percents.map((percent) => {
+      const parsed = parsePercent(percent);
+      if (parsed === null) return '';
+      return (parsed / 100).toString();
+    });
+    setWeights(decimalWeights);
+  };
+
+  const updateWeightPercent = (index: number, value: string) => {
+    const next = [...percentInputs];
+    next[index] = value;
+    setPercentInputs(next);
+    syncDecimalWeights(next);
   };
 
   const setEqualWeights = () => {
-    const equalWeight = (1 / criteria.length).toFixed(4);
-    setWeights(criteria.map(() => equalWeight));
+    const eachPercent = 100 / criteria.length;
+    const next = criteria.map(() => formatPercent(eachPercent));
+    setPercentInputs(next);
+    syncDecimalWeights(next);
   };
 
-  const totalWeight = weights.reduce((sum, w) => sum + (parseFloat(String(w)) || 0), 0);
-  const isValidTotal = Math.abs(totalWeight - 1) < 0.01;
-  const allWeightsValid = weights.every(w => String(w || '').trim() !== '' && !isNaN(parseFloat(String(w))) && parseFloat(String(w)) >= 0);
+  const normalizeTo100 = () => {
+    const parsed = percentInputs.map((value) => parsePercent(value) || 0);
+    const total = parsed.reduce((sum, value) => sum + value, 0);
+    if (total <= 0) return;
+
+    const normalized = parsed.map((value) => (value / total) * 100);
+    const rounded = normalized.map((value) => Number(value.toFixed(2)));
+    const sumExceptLast = rounded.slice(0, -1).reduce((sum, value) => sum + value, 0);
+    if (rounded.length > 0) {
+      rounded[rounded.length - 1] = Number((100 - sumExceptLast).toFixed(2));
+    }
+
+    const next = rounded.map((value) => formatPercent(value));
+    setPercentInputs(next);
+    syncDecimalWeights(next);
+  };
+
+  const parsedPercents = useMemo(
+    () => percentInputs.map((value) => parsePercent(value)),
+    [percentInputs]
+  );
+
+  const totalPercent = parsedPercents.reduce(
+    (sum, value) => sum + (value ?? 0),
+    0
+  );
+
+  const remainingPercent = 100 - totalPercent;
+  const isValidTotal = Math.abs(remainingPercent) < 0.01;
+  const allWeightsValid = parsedPercents.every((value) => value !== null);
+  const hasAnyValue = parsedPercents.some((value) => value !== null && value > 0);
 
   const canProceed = allWeightsValid && isValidTotal;
 
@@ -38,61 +102,66 @@ export default function TOPSISWeightsStep({
     <div className="card max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">TOPSIS - Set Criteria Weights</h2>
       <p className="text-gray-600 mb-6">
-        Assign importance weights to each criterion. Weights must sum to 1.0 (100%).
+        Set each criterion importance using percentages. The total must be exactly 100%.
       </p>
 
       {/* Quick Actions */}
-      <div className="mb-6">
+      <div className="mb-6 flex flex-wrap gap-2">
         <button onClick={setEqualWeights} className="btn-secondary">
           Set Equal Weights ({(100 / criteria.length).toFixed(1)}% each)
         </button>
+        <button
+          onClick={normalizeTo100}
+          disabled={!hasAnyValue}
+          className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Normalize to 100%
+        </button>
       </div>
 
-      {/* Weights Table */}
+      {/* Remaining */}
       <div className="mb-6">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="p-3 text-left border border-gray-300">Criterion</th>
-              <th className="p-3 text-center border border-gray-300 w-32">Weight</th>
-              <th className="p-3 text-center border border-gray-300 w-32">Percentage</th>
-            </tr>
-          </thead>
-          <tbody>
-            {criteria.map((criterion, index) => (
-              <tr key={index}>
-                <td className="p-3 border border-gray-300 font-medium">{criterion}</td>
-                <td className="p-2 border border-gray-300">
-                  <input
-                    type="text"
-                    value={weights[index]}
-                    onChange={(e) => updateWeight(index, e.target.value)}
-                    placeholder="0.25"
-                    className="w-full px-2 py-1 text-center border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </td>
-                <td className="p-3 border border-gray-300 text-center text-gray-600">
-                  {weights[index] ? `${(parseFloat(weights[index]) * 100).toFixed(1)}%` : '-'}
-                </td>
-              </tr>
-            ))}
-            <tr className={`font-bold ${isValidTotal ? 'bg-green-50' : 'bg-red-50'}`}>
-              <td className="p-3 border border-gray-300">Total</td>
-              <td className="p-3 border border-gray-300 text-center">{totalWeight.toFixed(4)}</td>
-              <td className="p-3 border border-gray-300 text-center">
-                {(totalWeight * 100).toFixed(1)}%
-                {isValidTotal ? ' ✓' : ' ⚠'}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div className={`p-3 rounded-lg border ${isValidTotal ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
+          <p className={`text-sm font-medium ${isValidTotal ? 'text-green-700' : 'text-orange-700'}`}>
+            Total: {totalPercent.toFixed(2)}% · Remaining: {remainingPercent.toFixed(2)}% {isValidTotal ? '✓' : ''}
+          </p>
+        </div>
+      </div>
+
+      {/* Sentence Inputs */}
+      <div className="mb-6 space-y-3">
+        {criteria.map((criterion, index) => {
+          const isRowValid = parsedPercents[index] !== null;
+
+          return (
+            <div key={index} className="p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:gap-3">
+                <span className="text-gray-700 sm:w-24 sm:flex-none">Importance of</span>
+                <span className="font-semibold text-blue-700 sm:flex-1 sm:min-w-0 sm:truncate">{criterion}</span>
+                <span className="text-gray-700 sm:w-6 sm:flex-none">is</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={percentInputs[index] ?? ''}
+                  onChange={(e) => updateWeightPercent(index, e.target.value)}
+                  placeholder="e.g. 25"
+                  className={`w-28 px-2 py-1 rounded border text-center focus:outline-none focus:ring-2 focus:ring-blue-500 sm:flex-none ${
+                    isRowValid ? 'border-gray-300 bg-white' : 'border-red-300 bg-red-50'
+                  }`}
+                />
+                <span className="text-gray-700 sm:w-4 sm:flex-none">%</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Validation message */}
       {!isValidTotal && allWeightsValid && (
         <div className="mb-6 p-4 bg-red-50 rounded-lg">
           <p className="text-sm text-red-700">
-            ⚠ Weights must sum to 1.0. Current total: {totalWeight.toFixed(4)}
+            ⚠ Total must be exactly 100%. Adjust values or click Normalize to 100%.
           </p>
         </div>
       )}
@@ -103,8 +172,8 @@ export default function TOPSISWeightsStep({
         <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
           <li>Weights represent the relative importance of each criterion</li>
           <li>Higher weight = more important criterion</li>
-          <li>Use decimal values (e.g., 0.25 for 25%)</li>
-          <li>All weights must sum to exactly 1.0</li>
+          <li>Use percentages (e.g., 25 means 25%)</li>
+          <li>All weights must sum to exactly 100%</li>
         </ul>
       </div>
 
