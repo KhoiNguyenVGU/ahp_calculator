@@ -87,7 +87,7 @@ export default function TOPSISWeightsStep({
   );
 
   const totalPercent = parsedPercents.reduce(
-    (sum, value) => sum + (value ?? 0),
+    (sum: number, value) => sum + (value ?? 0),
     0
   );
 
