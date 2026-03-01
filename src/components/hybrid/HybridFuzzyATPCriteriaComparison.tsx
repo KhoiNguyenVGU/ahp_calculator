@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { fahpSaatyScale } from '@/utils/fahp';
+import React from 'react';
+import { ConfidenceKey, fahpSaatyScale } from '@/utils/fahp';
 
 interface HybridFuzzyATPCriteriaComparisonProps {
   criteria: string[];
   criteriaMatrix: string[][];
   setCriteriaMatrix: (matrix: string[][]) => void;
+  confidenceMatrix: (ConfidenceKey | undefined)[][];
+  setConfidenceMatrix: (matrix: (ConfidenceKey | undefined)[][]) => void;
   onNext: () => void;
   onBack: () => void;
 }
@@ -15,42 +17,40 @@ export default function HybridFuzzyATPCriteriaComparison({
   criteria,
   criteriaMatrix,
   setCriteriaMatrix,
+  confidenceMatrix,
+  setConfidenceMatrix,
   onNext,
   onBack,
 }: HybridFuzzyATPCriteriaComparisonProps) {
-  const n = criteria.length;
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleNext = () => {
-    setIsProcessing(true);
-    // Use setTimeout to allow UI to update before heavy processing
-    setTimeout(() => {
-      onNext();
-      setIsProcessing(false);
-    }, 100);
-  };
-
-  const handleValueChange = (i: number, j: number, value: string) => {
-    const newMatrix = criteriaMatrix.map(row => [...row]);
+  const handlePairChange = (i: number, j: number, value: string) => {
+    const newMatrix = criteriaMatrix.map((row) => [...row]);
     newMatrix[i][j] = value;
-    if (i !== j) {
-      // Update inverse in lower triangle
-      const parts = value.split('/');
-      if (parts.length === 2 && parts[0] === '1') {
-        newMatrix[j][i] = parts[1];
-      } else if (value === '1') {
-        newMatrix[j][i] = '1';
-      } else {
-        newMatrix[j][i] = `1/${value}`;
-      }
-    }
+    newMatrix[j][i] = value === '1' ? '1' : value.startsWith('1/') ? value.substring(2) : `1/${value}`;
     setCriteriaMatrix(newMatrix);
   };
 
-  const isComplete = criteriaMatrix.every(row => row.every(val => val !== ''));
+  const handleConfidenceChange = (i: number, j: number, confidence: ConfidenceKey) => {
+    const newMatrix = confidenceMatrix.map((row) => [...row]);
+    newMatrix[i][j] = confidence;
+    newMatrix[j][i] = confidence;
+    setConfidenceMatrix(newMatrix);
+  };
+
+  const getPairs = () => {
+    const pairs: { i: number; j: number; first: string; second: string }[] = [];
+    for (let i = 0; i < criteria.length; i++) {
+      for (let j = i + 1; j < criteria.length; j++) {
+        pairs.push({ i, j, first: criteria[i], second: criteria[j] });
+      }
+    }
+    return pairs;
+  };
+
+  const pairs = getPairs();
+  const canProceed = pairs.every((pair) => criteriaMatrix[pair.i]?.[pair.j] && criteriaMatrix[pair.i][pair.j] !== '');
 
   return (
-    <div className="card max-w-6xl mx-auto">
+    <div className="card max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">
         Fuzzy AHP Phase - Compare Criteria Pairwise
       </h2>
@@ -59,114 +59,80 @@ export default function HybridFuzzyATPCriteriaComparison({
         Fuzzy AHP will convert these to fuzzy weights.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <div className="lg:col-span-3">
-          <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
-            <table className="min-w-full">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="border px-4 py-3 text-left font-medium text-gray-700">
-                    Comparison
-                  </th>
-                  {criteria.map((crit, j) => (
-                    <th
-                      key={j}
-                      className="border px-4 py-3 text-left font-medium text-gray-700 text-sm"
-                    >
-                      {crit}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {criteria.map((critI, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="border px-4 py-3 font-medium text-gray-800 bg-gray-50">
-                      {critI}
-                    </td>
-                    {criteria.map((critJ, j) => (
-                      <td key={j} className="border px-4 py-3">
-                        {i === j ? (
-                          <div className="bg-gray-100 px-3 py-2 rounded-lg text-center font-semibold text-gray-600">
-                            1
-                          </div>
-                        ) : i < j ? (
-                          <select
-                            value={criteriaMatrix[i][j] || '1'}
-                            onChange={(e) => handleValueChange(i, j, e.target.value)}
-                            className="w-full px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            {fahpSaatyScale.map((item) => (
-                              <option key={item.value} value={item.value}>
-                                {item.value}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <div className="bg-blue-50 px-3 py-2 rounded-lg text-center text-sm text-blue-700 font-mono">
-                            {criteriaMatrix[i][j] || '1'}
-                          </div>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+        <h3 className="text-sm font-medium text-blue-800 mb-3">Scale Reference</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+          <div>
+            <strong className="text-blue-900">1</strong> = Equal importance
           </div>
-        </div>
-
-        {/* Scale Legend */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 h-fit">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Saaty Scale</h4>
-          <div className="space-y-2 text-xs text-gray-600">
-            <div><strong>1</strong> = Equal</div>
-            <div><strong>3</strong> = Moderate</div>
-            <div><strong>5</strong> = Strong</div>
-            <div><strong>7</strong> = Very strong</div>
-            <div><strong>9</strong> = Extreme</div>
-            <hr className="my-2" />
-            <p>Use 1/n for inverse values (e.g., 1/3 if less important)</p>
+          <div>
+            <strong className="text-blue-900">3</strong> = Moderate importance
+          </div>
+          <div>
+            <strong className="text-blue-900">5</strong> = Strong importance
+          </div>
+          <div>
+            <strong className="text-blue-900">7</strong> = Very strong importance
+          </div>
+          <div>
+            <strong className="text-blue-900">9</strong> = Extreme importance
+          </div>
+          <div>
+            <strong className="text-blue-900">1/3–1/9</strong> = Reverse (less important)
           </div>
         </div>
       </div>
 
-      {/* Info */}
-      <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-700">
-          <strong>Fuzzy Conversion:</strong> Ratings are converted to
-          Triangular Fuzzy Numbers (L, M, U). Example: 5 → (4, 5, 6)
-        </p>
+      <div className="space-y-4 mb-6">
+        {pairs.map((pair, idx) => (
+          <div key={`${pair.i}-${pair.j}`} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <div className="mb-3">
+              <p className="text-gray-800 font-medium">
+                <span className="text-blue-600 font-semibold">{pair.first}</span> compared to{' '}
+                <span className="text-orange-600 font-semibold">{pair.second}</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Question: How important is <strong>{pair.first}</strong> relative to{' '}
+                <strong>{pair.second}</strong>?
+              </p>
+            </div>
+            <select
+              value={criteriaMatrix[pair.i][pair.j] || ''}
+              onChange={(e) => handlePairChange(pair.i, pair.j, e.target.value)}
+              className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">-- Select importance --</option>
+              {fahpSaatyScale.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.value}
+                </option>
+              ))}
+            </select>
+            <div className="mt-3">
+              <label className="block text-xs text-gray-600 mb-1">How confident are you?</label>
+              <select
+                value={confidenceMatrix[pair.i]?.[pair.j] || 'medium'}
+                onChange={(e) => handleConfidenceChange(pair.i, pair.j, e.target.value as ConfidenceKey)}
+                className="w-full md:w-[28rem] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="low">Low confidence — Use a wider range</option>
+                <option value="medium">Medium confidence — Use a moderate range</option>
+                <option value="high">High confidence — Use a tight range</option>
+              </select>
+            </div>
+            {idx < pairs.length - 1 && <div className="mt-3 border-t border-gray-300" />}
+          </div>
+        ))}
       </div>
 
-      {/* Actions */}
       <div className="flex justify-between">
-        <button onClick={onBack} className="btn-secondary" disabled={isProcessing}>
+        <button onClick={onBack} className="btn-secondary">
           ← Back
         </button>
-        <button
-          onClick={handleNext}
-          disabled={!isComplete || isProcessing}
-          className="btn-primary"
-        >
-          {isProcessing ? 'Processing...' : 'Enter Alternative Data →'}
+        <button onClick={onNext} disabled={!canProceed} className="btn-primary">
+          Enter Alternative Data →
         </button>
       </div>
-
-      {/* Progress */}
-      {isProcessing && (
-        <div className="mt-4">
-          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-            <div
-              className="bg-blue-600 h-2.5 rounded-full animate-pulse"
-              style={{ width: '100%' }}
-            />
-          </div>
-          <p className="text-sm text-gray-600 text-center mt-2">
-            Processing large dataset, please wait...
-          </p>
-        </div>
-      )}
     </div>
   );
 

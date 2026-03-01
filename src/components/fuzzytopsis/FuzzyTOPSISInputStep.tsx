@@ -5,10 +5,10 @@ import { TFN } from '@/utils/fahp';
 
 type ConfidenceKey = 'low' | 'medium' | 'high';
 
-const confidenceOptions: { key: ConfidenceKey; label: string; description: string }[] = [
-  { key: 'low', label: 'Low confidence', description: 'Use a wider range' },
-  { key: 'medium', label: 'Medium confidence', description: 'Use a moderate range' },
-  { key: 'high', label: 'High confidence', description: 'Use a tight range' },
+const confidenceOptions: { key: ConfidenceKey; label: string }[] = [
+  { key: 'low', label: 'Low confidence — Use a wider range' },
+  { key: 'medium', label: 'Medium confidence — Use a moderate range' },
+  { key: 'high', label: 'High confidence — Use a tight range' },
 ];
 
 const confidenceSpreadRatio: Record<ConfidenceKey, number> = {
@@ -332,7 +332,7 @@ export default function FuzzyTOPSISInputStep({
                           >
                             {confidenceOptions.map((option) => (
                               <option key={option.key} value={option.key}>
-                                {option.label} — {option.description}
+                                {option.label}
                               </option>
                             ))}
                           </select>

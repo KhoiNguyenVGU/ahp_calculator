@@ -59,14 +59,6 @@ export default function HybridFuzzyATPAlternativeData({
         The Fuzzy AHP weights (from the previous step) will be automatically applied.
       </p>
 
-      {/* Instructions Card */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <p className="text-sm text-blue-800">
-          <strong>💡 Tip:</strong> You already determined criteria importance in the Fuzzy AHP phase. 
-          Now just rate each candidate fairly and consistently on each criterion.
-        </p>
-      </div>
-
       {/* Dataset Notification */}
       {hasPrefilledData && (
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">

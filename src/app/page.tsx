@@ -25,7 +25,7 @@ import { calculateTOPSIS, TOPSISResult } from '@/utils/topsis';
 import { calculateFAHP, FAHPResult } from '@/utils/fahp';
 import { calculateFuzzyTOPSIS, FuzzyTOPSISResult } from '@/utils/fuzzyTopsis';
 import { calculateHybridFuzzyATPTopsis, HybridFuzzyATPTopsisResult } from '@/utils/hybridFuzzyATPTopsis';
-import { TFN } from '@/utils/fahp';
+import { ConfidenceKey, TFN } from '@/utils/fahp';
 
 const AHP_STEPS = ['Define Problem', 'Compare Criteria', 'Compare Alternatives', 'Results'];
 const TOPSIS_STEPS = ['Enter Data', 'Set Weights', 'Results'];
@@ -61,7 +61,9 @@ export default function Home() {
   const [fahpCriteria, setFahpCriteria] = useState<string[]>(['', '']);
   const [fahpAlternatives, setFahpAlternatives] = useState<string[]>(['', '']);
   const [fahpCriteriaMatrix, setFahpCriteriaMatrix] = useState<string[][]>([]);
+  const [fahpCriteriaConfidenceMatrix, setFahpCriteriaConfidenceMatrix] = useState<(ConfidenceKey | undefined)[][]>([]);
   const [fahpAlternativeMatrices, setFahpAlternativeMatrices] = useState<string[][][]>([]);
+  const [fahpAlternativeConfidenceMatrices, setFahpAlternativeConfidenceMatrices] = useState<(ConfidenceKey | undefined)[][][]>([]);
   const [fahpResults, setFahpResults] = useState<FAHPResult | null>(null);
 
   // Fuzzy TOPSIS State
@@ -87,6 +89,7 @@ export default function Home() {
   const [hybridAlternatives, setHybridAlternatives] = useState<string[]>(['', '']);
   const [hybridCriteriaTypes, setHybridCriteriaTypes] = useState<('benefit' | 'cost')[]>(['benefit', 'benefit']);
   const [hybridCriteriaMatrix, setHybridCriteriaMatrix] = useState<string[][]>([]);
+  const [hybridCriteriaConfidenceMatrix, setHybridCriteriaConfidenceMatrix] = useState<(ConfidenceKey | undefined)[][]>([]);
   const [hybridAlternativeDataMatrix, setHybridAlternativeDataMatrix] = useState<string[][]>([]);
   const [hybridDataMatrix, setHybridDataMatrix] = useState<number[][]>([]);
   const [hybridResults, setHybridResults] = useState<HybridFuzzyATPTopsisResult | null>(null);
@@ -172,6 +175,24 @@ export default function Home() {
     setFahpCriteriaMatrix(newMatrix);
   }, [fahpCriteria.length]);
 
+  // Initialize FAHP criteria confidence matrix when criteria change
+  useEffect(() => {
+    const n = fahpCriteria.length;
+    const newMatrix: (ConfidenceKey | undefined)[][] = Array(n)
+      .fill(null)
+      .map(() => Array(n).fill('medium'));
+
+    for (let i = 0; i < Math.min(fahpCriteriaConfidenceMatrix.length, n); i++) {
+      for (let j = 0; j < Math.min(fahpCriteriaConfidenceMatrix[i].length, n); j++) {
+        if (fahpCriteriaConfidenceMatrix[i][j]) {
+          newMatrix[i][j] = fahpCriteriaConfidenceMatrix[i][j];
+        }
+      }
+    }
+
+    setFahpCriteriaConfidenceMatrix(newMatrix);
+  }, [fahpCriteria.length]);
+
   // Initialize FAHP alternative matrices
   useEffect(() => {
     const numCriteria = fahpCriteria.length;
@@ -200,6 +221,32 @@ export default function Home() {
     }
     
     setFahpAlternativeMatrices(newMatrices);
+  }, [fahpCriteria.length, fahpAlternatives.length]);
+
+  // Initialize FAHP alternative confidence matrices
+  useEffect(() => {
+    const numCriteria = fahpCriteria.length;
+    const numAlternatives = fahpAlternatives.length;
+
+    const newMatrices: (ConfidenceKey | undefined)[][][] = Array(numCriteria)
+      .fill(null)
+      .map(() =>
+        Array(numAlternatives)
+          .fill(null)
+          .map(() => Array(numAlternatives).fill('medium'))
+      );
+
+    for (let c = 0; c < Math.min(fahpAlternativeConfidenceMatrices.length, numCriteria); c++) {
+      for (let i = 0; i < Math.min(fahpAlternativeConfidenceMatrices[c]?.length || 0, numAlternatives); i++) {
+        for (let j = 0; j < Math.min(fahpAlternativeConfidenceMatrices[c]?.[i]?.length || 0, numAlternatives); j++) {
+          if (fahpAlternativeConfidenceMatrices[c]?.[i]?.[j]) {
+            newMatrices[c][i][j] = fahpAlternativeConfidenceMatrices[c][i][j];
+          }
+        }
+      }
+    }
+
+    setFahpAlternativeConfidenceMatrices(newMatrices);
   }, [fahpCriteria.length, fahpAlternatives.length]);
 
   // Initialize Fuzzy TOPSIS data matrix when criteria/alternatives change
@@ -251,6 +298,24 @@ export default function Home() {
     }
 
     setHybridCriteriaMatrix(newMatrix);
+  }, [hybridCriteria.length]);
+
+  // Initialize Hybrid criteria confidence matrix when criteria change
+  useEffect(() => {
+    const n = hybridCriteria.length;
+    const newMatrix: (ConfidenceKey | undefined)[][] = Array(n)
+      .fill(null)
+      .map(() => Array(n).fill('medium'));
+
+    for (let i = 0; i < Math.min(hybridCriteriaConfidenceMatrix.length, n); i++) {
+      for (let j = 0; j < Math.min(hybridCriteriaConfidenceMatrix[i].length, n); j++) {
+        if (hybridCriteriaConfidenceMatrix[i][j]) {
+          newMatrix[i][j] = hybridCriteriaConfidenceMatrix[i][j];
+        }
+      }
+    }
+
+    setHybridCriteriaConfidenceMatrix(newMatrix);
   }, [hybridCriteria.length]);
 
   // Initialize Hybrid alternative data matrix when alternatives/criteria change
@@ -321,7 +386,9 @@ export default function Home() {
       fahpCriteriaMatrix,
       fahpAlternativeMatrices,
       fahpCriteria.length,
-      fahpAlternatives.length
+      fahpAlternatives.length,
+      fahpCriteriaConfidenceMatrix,
+      fahpAlternativeConfidenceMatrices
     );
     setFahpResults(result);
     setFahpStep(3);
@@ -333,7 +400,9 @@ export default function Home() {
     setFahpCriteria(['', '']);
     setFahpAlternatives(['', '']);
     setFahpCriteriaMatrix([]);
+    setFahpCriteriaConfidenceMatrix([]);
     setFahpAlternativeMatrices([]);
+    setFahpAlternativeConfidenceMatrices([]);
     setFahpResults(null);
   };
 
@@ -371,7 +440,8 @@ export default function Home() {
       rawAlternativeMatrix,
       hybridCriteria.length,
       hybridAlternatives.length,
-      hybridCriteriaTypes
+      hybridCriteriaTypes,
+      hybridCriteriaConfidenceMatrix
     );
     setHybridResults(result);
     setHybridStep(3);
@@ -384,6 +454,7 @@ export default function Home() {
     setHybridAlternatives(['', '']);
     setHybridCriteriaTypes(['benefit', 'benefit']);
     setHybridCriteriaMatrix([]);
+    setHybridCriteriaConfidenceMatrix([]);
     setHybridAlternativeDataMatrix([]);
     setHybridDataMatrix([]);
     setHybridResults(null);
@@ -577,6 +648,8 @@ export default function Home() {
                 criteria={fahpCriteria}
                 criteriaMatrix={fahpCriteriaMatrix}
                 setCriteriaMatrix={setFahpCriteriaMatrix}
+                confidenceMatrix={fahpCriteriaConfidenceMatrix}
+                setConfidenceMatrix={setFahpCriteriaConfidenceMatrix}
                 onBack={() => setFahpStep(0)}
                 onNext={() => setFahpStep(2)}
               />
@@ -588,6 +661,8 @@ export default function Home() {
                 alternatives={fahpAlternatives}
                 alternativeMatrices={fahpAlternativeMatrices}
                 setAlternativeMatrices={setFahpAlternativeMatrices}
+                confidenceMatrices={fahpAlternativeConfidenceMatrices}
+                setConfidenceMatrices={setFahpAlternativeConfidenceMatrices}
                 onBack={() => setFahpStep(1)}
                 onCalculate={handleFAHPCalculate}
               />
@@ -673,6 +748,8 @@ export default function Home() {
                 criteria={hybridCriteria}
                 criteriaMatrix={hybridCriteriaMatrix}
                 setCriteriaMatrix={setHybridCriteriaMatrix}
+                confidenceMatrix={hybridCriteriaConfidenceMatrix}
+                setConfidenceMatrix={setHybridCriteriaConfidenceMatrix}
                 onNext={() => setHybridStep(2)}
                 onBack={() => setHybridStep(0)}
               />

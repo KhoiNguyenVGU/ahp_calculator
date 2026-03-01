@@ -31,7 +31,8 @@ export default function HybridFuzzyATPInputStep({
   setDataMatrix,
 }: HybridFuzzyATPInputStepProps) {
   const [showExample, setShowExample] = useState(false);
-  const [inputMode, setInputMode] = useState<'manual' | 'example' | 'dataset'>('manual');
+  const [inputMode, setInputMode] = useState<'manual' | 'dataset'>('manual');
+  const [isDatasetMapped, setIsDatasetMapped] = useState(false);
   const [csvData, setCsvData] = useState<any[]>([]);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [showAllCandidates, setShowAllCandidates] = useState(false);
@@ -42,7 +43,11 @@ export default function HybridFuzzyATPInputStep({
     setCriteria(['Technical Skills', 'Communication', 'Problem-Solving', 'Leadership', 'Experience']);
     setCriteriaTypes(['benefit', 'benefit', 'benefit', 'benefit', 'benefit']);
     setAlternatives(['Candidate A', 'Candidate B', 'Candidate C', 'Candidate D']);
-    setInputMode('example');
+    setInputMode('manual');
+    setIsDatasetMapped(false);
+    if (setDataMatrix) {
+      setDataMatrix([]);
+    }
   };
 
   // Handle dataset loading
@@ -63,18 +68,27 @@ export default function HybridFuzzyATPInputStep({
     }
     
     setInputMode('dataset');
+    setIsDatasetMapped(true);
   };
 
   const resetToManual = () => {
     setInputMode('manual');
     setGoal('');
-    setCriteria(['Criterion 1', 'Criterion 2']);
-    setAlternatives(['Alternative 1', 'Alternative 2']);
+    setCriteria(['', '']);
+    setAlternatives(['', '']);
     setCriteriaTypes(['benefit', 'benefit']);
+    setCsvData([]);
+    setCsvHeaders([]);
+    setShowExample(false);
+    setShowAllCandidates(false);
+    setIsDatasetMapped(false);
+    if (setDataMatrix) {
+      setDataMatrix([]);
+    }
   };
 
   const addCriterion = () => {
-    setCriteria([...criteria, `Criterion ${criteria.length + 1}`]);
+    setCriteria([...criteria, '']);
     setCriteriaTypes([...criteriaTypes, 'benefit']);
   };
 
@@ -98,7 +112,7 @@ export default function HybridFuzzyATPInputStep({
   };
 
   const addAlternative = () => {
-    setAlternatives([...alternatives, `Alternative ${alternatives.length + 1}`]);
+    setAlternatives([...alternatives, '']);
   };
 
   const removeAlternative = (index: number) => {
@@ -121,7 +135,7 @@ export default function HybridFuzzyATPInputStep({
     alternatives.length >= 2;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md max-w-4xl mx-auto">
+    <div className="card max-w-5xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">
         Step 1: Define Your Decision Problem
       </h2>
@@ -131,26 +145,51 @@ export default function HybridFuzzyATPInputStep({
 
       {/* Data Source Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Choose Data Source
-        </label>
-        <div className="flex gap-2 mb-4">
-          {['manual','example','dataset'].map(mode => (
+        <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl mb-4">
+          {['manual','dataset'].map(mode => (
             <button
               key={mode}
-              onClick={() => setInputMode(mode as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              onClick={() => {
+                setInputMode(mode as any);
+                setShowExample(false);
+              }}
+              className={`w-full px-6 py-3 rounded-lg text-sm font-semibold transition-colors ${
                 inputMode === mode
-                  ? 'bg-gray-700 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-700 text-white shadow-sm'
+                  : 'bg-transparent text-gray-700 hover:bg-gray-200'
               }`}
             >
               {mode === 'manual' && '✏️ Manual Entry'}
-              {mode === 'example' && '📝 Example Data'}
               {mode === 'dataset' && '📊 Import Dataset'}
             </button>
           ))}
         </div>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {inputMode === 'manual' && (
+            <button
+              onClick={() => {
+                loadExampleData();
+                setShowExample(true);
+              }}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+            >
+              📝 Load Example Data
+            </button>
+          )}
+          <button
+            onClick={resetToManual}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+          >
+            🧹 Clear All
+          </button>
+        </div>
+
+        {inputMode === 'manual' && showExample && (
+          <p className="text-xs text-green-600 mt-1">
+            ✓ Example loaded! You can now edit or proceed with the example data.
+          </p>
+        )}
       </div>
 
       {inputMode === 'dataset' && (
@@ -162,118 +201,94 @@ export default function HybridFuzzyATPInputStep({
         </div>
       )}
 
-      {inputMode === 'example' && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <button
-            onClick={() => {
-              loadExampleData();
-              setShowExample(true);
-            }}
-            className="text-sm font-semibold text-green-700 hover:text-green-800"
-          >
-            📝 Load Interview Example (click to auto-fill)
-          </button>
-          {showExample && (
-            <p className="text-xs text-green-600 mt-2">
-              ✓ Example loaded! You can now edit or proceed with the example data.
-            </p>
-          )}
-        </div>
-      )}
-
-      {(inputMode === 'manual' || inputMode === 'example' || (inputMode === 'dataset' && criteria.length > 0)) && (
+      {(inputMode === 'manual' || (inputMode === 'dataset' && isDatasetMapped && criteria.length > 0)) && (
         <div>
 
           {/* Goal */}
-          <div className="mb-8">
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              📌 Decision Goal/Problem <span className="text-red-500">*</span>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Goal/Problem <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
               placeholder="e.g., Select the best candidate..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Criteria */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <label className="block text-sm font-bold text-gray-700">
-                📊 Evaluation Criteria (min 2) <span className="text-red-500">*</span>
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Criteria (min 2) <span className="text-red-500">*</span>
               </label>
               <button onClick={addCriterion} className="btn-secondary text-sm">
                 + Add Criterion
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {criteria.map((criterion, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      value={criterion}
-                      onChange={(e) => updateCriterion(index, e.target.value)}
-                      placeholder={`Criterion ${index + 1}`}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                <div key={index} className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={criterion}
+                    onChange={(e) => updateCriterion(index, e.target.value)}
+                    placeholder={`Criterion ${index + 1} (e.g., Technical Skills)`}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
 
-                    <select
-                      value={criteriaTypes[index]}
-                      onChange={(e) =>
-                        updateCriteriaType(index, e.target.value as 'benefit' | 'cost')
-                      }
-                      className="w-64 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <select
+                    value={criteriaTypes[index]}
+                    onChange={(e) =>
+                      updateCriteriaType(index, e.target.value as 'benefit' | 'cost')
+                    }
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="benefit">📈 Benefit (higher is better)</option>
+                    <option value="cost">📉 Cost (lower is better)</option>
+                  </select>
+
+                  {criteria.length > 2 && (
+                    <button
+                      onClick={() => removeCriterion(index)}
+                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
                     >
-                      <option value="benefit">📈 Benefit (higher is better)</option>
-                      <option value="cost">📉 Cost (lower is better)</option>
-                    </select>
-
-                    {criteria.length > 2 && (
-                      <button
-                        onClick={() => removeCriterion(index)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
           {/* Candidates */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <label className="block text-sm font-bold text-gray-700">
-                👥 Candidates to Evaluate (min 2) <span className="text-red-500">*</span>
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Alternatives (min 2) <span className="text-red-500">*</span>
               </label>
               <button onClick={addAlternative} className="btn-secondary text-sm">
-                + Add Candidate
+                + Add Alternative
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {alternatives.slice(0, showAllCandidates ? alternatives.length : 15).map((alt, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <span className="w-8 text-center text-gray-500 font-medium">
-                    {index + 1}.
-                  </span>
+                <div key={index} className="flex gap-2 items-center">
                   <input
                     type="text"
                     value={alt}
                     onChange={(e) => updateAlternative(index, e.target.value)}
-                    placeholder={`Candidate ${index + 1}`}
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={`Alternative ${index + 1} (e.g., Candidate A)`}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {alternatives.length > 2 && (
                     <button
                       onClick={() => removeAlternative(index)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
                     >
                       ✕
                     </button>
@@ -295,12 +310,6 @@ export default function HybridFuzzyATPInputStep({
             )}
           </div>
 
-        </div>
-      )}
-
-      {!canProceed && (
-        <div className="bg-red-50 border border-red-200 rounded p-3 mb-4 text-sm text-red-700">
-          ❌ Please fill in all required fields
         </div>
       )}
 

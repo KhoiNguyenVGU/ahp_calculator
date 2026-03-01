@@ -1,5 +1,5 @@
 // Hybrid Fuzzy AHP-TOPSIS Calculation Utilities
-import { TFN, calculateWeightsFromFuzzyMatrix, buildFuzzyMatrix, defuzzify } from './fahp';
+import { TFN, ConfidenceKey, calculateWeightsFromFuzzyMatrix, buildFuzzyMatrix, defuzzify } from './fahp';
 import { calculateFuzzyTOPSIS, FuzzyTOPSISResult } from './fuzzyTopsis';
 
 export interface HybridFuzzyATPTopsisResult {
@@ -34,12 +34,13 @@ export function calculateHybridFuzzyATPTopsis(
   alternativeDataMatrix: number[][],
   numCriteria: number,
   numAlternatives: number,
-  criteriaTypes: ('benefit' | 'cost')[]
+  criteriaTypes: ('benefit' | 'cost')[],
+  criteriaConfidenceMatrix?: (ConfidenceKey | undefined)[][]
 ): HybridFuzzyATPTopsisResult {
   // === PHASE 1: Fuzzy AHP - Calculate Criterion Weights ===
   
   // Build fuzzy pairwise comparison matrix for criteria
-  const fuzzyCriteriaMatrix = buildFuzzyMatrix(criteriaMatrix, numCriteria);
+  const fuzzyCriteriaMatrix = buildFuzzyMatrix(criteriaMatrix, numCriteria, criteriaConfidenceMatrix);
   
   // Calculate weights from the fuzzy matrix
   const ahpWeights = calculateWeightsFromFuzzyMatrix(fuzzyCriteriaMatrix);

@@ -24,6 +24,28 @@ export interface FAHPResult {
   rankings: number[];
 }
 
+export type ConfidenceKey = 'low' | 'medium' | 'high';
+
+const confidenceSpreadMultiplier: Record<ConfidenceKey, number> = {
+  low: 1.25,
+  medium: 1,
+  high: 0.75,
+};
+
+function applyConfidenceToTFN(tfn: TFN, confidence: ConfidenceKey): TFN {
+  if (confidence === 'medium') return tfn;
+
+  const multiplier = confidenceSpreadMultiplier[confidence];
+  const lowerSpread = tfn.m - tfn.l;
+  const upperSpread = tfn.u - tfn.m;
+
+  return {
+    l: Math.max(0, tfn.m - lowerSpread * multiplier),
+    m: tfn.m,
+    u: tfn.m + upperSpread * multiplier,
+  };
+}
+
 // Fuzzy scale mapping (Saaty scale to TFN)
 export const fuzzyScale: { [key: string]: TFN } = {
   '1': { l: 1, m: 1, u: 1 },
@@ -65,14 +87,19 @@ export function addTFN(a: TFN, b: TFN): TFN {
 }
 
 // Convert crisp Saaty value to TFN
-export function crispToFuzzy(value: string): TFN {
+export function crispToFuzzy(value: string, confidence: ConfidenceKey = 'medium'): TFN {
+  let baseTFN: TFN;
+
   // Handle fractions (inverse values)
   if (value.startsWith('1/')) {
     const denom = value.substring(2);
-    const baseTFN = fuzzyScale[denom] || { l: 1, m: 1, u: 1 };
-    return inverseTFN(baseTFN);
+    const positiveTFN = fuzzyScale[denom] || { l: 1, m: 1, u: 1 };
+    baseTFN = inverseTFN(positiveTFN);
+  } else {
+    baseTFN = fuzzyScale[value] || { l: 1, m: 1, u: 1 };
   }
-  return fuzzyScale[value] || { l: 1, m: 1, u: 1 };
+
+  return applyConfidenceToTFN(baseTFN, confidence);
 }
 
 // Calculate fuzzy geometric mean for a row
@@ -130,7 +157,11 @@ export function normalizeWeights(weights: number[]): number[] {
 }
 
 // Build fuzzy pairwise comparison matrix from crisp values
-export function buildFuzzyMatrix(crispMatrix: string[][], n: number): TFN[][] {
+export function buildFuzzyMatrix(
+  crispMatrix: string[][],
+  n: number,
+  confidenceMatrix?: (ConfidenceKey | undefined)[][]
+): TFN[][] {
   const fuzzyMatrix: TFN[][] = [];
   
   for (let i = 0; i < n; i++) {
@@ -139,7 +170,8 @@ export function buildFuzzyMatrix(crispMatrix: string[][], n: number): TFN[][] {
       if (i === j) {
         fuzzyMatrix[i][j] = { l: 1, m: 1, u: 1 };
       } else if (i < j) {
-        fuzzyMatrix[i][j] = crispToFuzzy(crispMatrix[i][j] || '1');
+        const confidence = confidenceMatrix?.[i]?.[j] || 'medium';
+        fuzzyMatrix[i][j] = crispToFuzzy(crispMatrix[i][j] || '1', confidence);
       } else {
         // Lower triangle is inverse of upper triangle
         fuzzyMatrix[i][j] = inverseTFN(fuzzyMatrix[j][i]);
@@ -184,10 +216,12 @@ export function calculateFAHP(
   criteriaMatrix: string[][],
   alternativeMatrices: string[][][],
   numCriteria: number,
-  numAlternatives: number
+  numAlternatives: number,
+  criteriaConfidenceMatrix?: (ConfidenceKey | undefined)[][],
+  alternativeConfidenceMatrices?: (ConfidenceKey | undefined)[][][]
 ): FAHPResult {
   // Build and process criteria matrix
-  const fuzzyCriteriaMatrix = buildFuzzyMatrix(criteriaMatrix, numCriteria);
+  const fuzzyCriteriaMatrix = buildFuzzyMatrix(criteriaMatrix, numCriteria, criteriaConfidenceMatrix);
   const criteriaResult = calculateWeightsFromFuzzyMatrix(fuzzyCriteriaMatrix);
   
   // Build and process alternative matrices for each criterion
@@ -198,7 +232,11 @@ export function calculateFAHP(
   const normalizedAlternativeWeights: number[][] = [];
   
   for (let c = 0; c < numCriteria; c++) {
-    const fuzzyAltMatrix = buildFuzzyMatrix(alternativeMatrices[c], numAlternatives);
+    const fuzzyAltMatrix = buildFuzzyMatrix(
+      alternativeMatrices[c],
+      numAlternatives,
+      alternativeConfidenceMatrices?.[c]
+    );
     fuzzyAlternativeMatrices.push(fuzzyAltMatrix);
     
     const altResult = calculateWeightsFromFuzzyMatrix(fuzzyAltMatrix);
