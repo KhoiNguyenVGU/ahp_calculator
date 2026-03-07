@@ -305,7 +305,7 @@ export default function DatasetLoader({ onDataLoaded, onMappingComplete }: Datas
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="text-lg font-bold text-blue-900 mb-3">📊 Load Kaggle Interview Dataset</h3>
           <p className="text-sm text-blue-800 mb-4">
-            Upload the <strong>Data - Base.csv</strong> file from the Kaggle interview dataset.
+            Upload the <strong>interview-data-processed.csv</strong> file from the Kaggle interview dataset.
             We'll automatically map the columns to evaluation criteria.
           </p>
           
