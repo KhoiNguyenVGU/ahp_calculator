@@ -140,7 +140,7 @@ export default function HybridFuzzyATPInputStep({
         Step 1: Define Your Decision Problem
       </h2>
       <p className="text-gray-600 mb-6">
-        Set up your evaluation criteria and candidates. Weights will be calculated through Fuzzy AHP, then used to rank candidates with Fuzzy TOPSIS.
+        Set up your evaluation criteria and candidates. Weights will be calculated through Fuzzy AHP, then used to rank candidates with TOPSIS.
       </p>
 
       {/* Data Source Selection */}

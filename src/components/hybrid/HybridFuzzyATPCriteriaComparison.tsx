@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ConfidenceKey, fahpSaatyScale } from '@/utils/fahp';
+import { ConfidenceKey, crispToFuzzy, fahpSaatyScale, formatTFN, inverseTFN } from '@/utils/fahp';
 
 interface HybridFuzzyATPCriteriaComparisonProps {
   criteria: string[];
@@ -86,6 +86,16 @@ export default function HybridFuzzyATPCriteriaComparison({
       <div className="space-y-4 mb-6">
         {pairs.map((pair, idx) => (
           <div key={`${pair.i}-${pair.j}`} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+            {(() => {
+              const selectedValue = criteriaMatrix[pair.i]?.[pair.j] || '';
+              const selectedConfidence = confidenceMatrix[pair.i]?.[pair.j] || 'medium';
+              const selectedTFN = selectedValue
+                ? crispToFuzzy(selectedValue, selectedConfidence)
+                : null;
+              const reciprocalTFN = selectedTFN ? inverseTFN(selectedTFN) : null;
+
+              return (
+                <>
             <div className="mb-3">
               <p className="text-gray-800 font-medium">
                 <span className="text-blue-600 font-semibold">{pair.first}</span> compared to{' '}
@@ -120,7 +130,22 @@ export default function HybridFuzzyATPCriteriaComparison({
                 <option value="high">High confidence — Use a tight range</option>
               </select>
             </div>
+            {selectedTFN && reciprocalTFN && (
+              <div className="mt-3 p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-xs text-indigo-900">
+                <p>
+                  Generated fuzzy number ({pair.first} over {pair.second}):{' '}
+                  <strong className="font-mono">{formatTFN(selectedTFN, 3)}</strong>
+                </p>
+                <p className="mt-1">
+                  Reciprocal fuzzy number ({pair.second} over {pair.first}):{' '}
+                  <strong className="font-mono">{formatTFN(reciprocalTFN, 3)}</strong>
+                </p>
+              </div>
+            )}
             {idx < pairs.length - 1 && <div className="mt-3 border-t border-gray-300" />}
+                </>
+              );
+            })()}
           </div>
         ))}
       </div>

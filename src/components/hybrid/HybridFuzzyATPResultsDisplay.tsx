@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { HybridFuzzyATPTopsisResult } from '@/utils/hybridFuzzyATPTopsis';
-import { TFN, formatTFN } from '@/utils/fahp';
+import { formatTFN } from '@/utils/fahp';
 import { exportToCSV, exportToJSON, downloadFile, generateHTMLReport } from '@/utils/exportResults';
 import CandidateComparison from '@/components/hybrid/HybridFuzzyATPCandidateComparison';
 
@@ -59,8 +59,8 @@ export default function HybridFuzzyATPResultsDisplay({
       name: alt,
       rank: result.finalRankings[index],
       score: result.finalScores[index],
-      distanceBest: result.fuzzyTOPSISResult.crispDistanceFromBest[index],
-      distanceWorst: result.fuzzyTOPSISResult.crispDistanceFromWorst[index],
+      distanceBest: result.topsisResult.distanceFromBest[index],
+      distanceWorst: result.topsisResult.distanceFromWorst[index],
     }))
     .sort((a, b) => a.rank - b.rank);
 
@@ -71,13 +71,13 @@ export default function HybridFuzzyATPResultsDisplay({
   return (
     <div className="card max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">
-        Hybrid Fuzzy AHP-TOPSIS Results
+        Hybrid Fuzzy AHP + TOPSIS Results
       </h2>
       <p className="text-gray-600 mb-2">
         <strong>Goal:</strong> {goal}
       </p>
       <p className="text-gray-600 mb-6">
-        Combined Fuzzy AHP criterion weights with Fuzzy TOPSIS alternative ranking
+        Combined Fuzzy AHP criterion weights with TOPSIS alternative ranking
       </p>
 
       {/* View Mode Selector */}
@@ -249,13 +249,13 @@ export default function HybridFuzzyATPResultsDisplay({
           )}
         </div>
 
-        {/* Phase 2: Fuzzy TOPSIS Results */}
+        {/* Phase 2: TOPSIS Results */}
         <div className="border rounded-lg">
           <button
             onClick={() => toggleSection('topsis')}
             className="w-full px-6 py-4 bg-cyan-50 hover:bg-cyan-100 flex justify-between items-center font-semibold text-gray-800 border-b transition-colors"
           >
-            <span>📈 Phase 2: Fuzzy TOPSIS - Alternative Rankings</span>
+            <span>📈 Phase 2: TOPSIS - Alternative Rankings</span>
             <span>{expandedSection === 'topsis' ? '▼' : '▶'}</span>
           </button>
           {expandedSection === 'topsis' && (
@@ -291,10 +291,10 @@ export default function HybridFuzzyATPResultsDisplay({
                             {alt}
                           </td>
                           <td className="border border-gray-300 px-4 py-2 font-mono">
-                            {result.fuzzyTOPSISResult.crispDistanceFromBest[i].toFixed(4)}
+                            {result.topsisResult.distanceFromBest[i].toFixed(4)}
                           </td>
                           <td className="border border-gray-300 px-4 py-2 font-mono">
-                            {result.fuzzyTOPSISResult.crispDistanceFromWorst[i].toFixed(4)}
+                            {result.topsisResult.distanceFromWorst[i].toFixed(4)}
                           </td>
                           <td className="border border-gray-300 px-4 py-2 font-bold text-purple-600">
                             {result.finalScores[i].toFixed(4)}
@@ -349,7 +349,7 @@ export default function HybridFuzzyATPResultsDisplay({
                           </td>
                           {criteria.map((_, j) => (
                             <td key={j} className="border border-gray-300 px-4 py-2 font-mono">
-                              {result.fuzzyTOPSISResult.fuzzyMatrix[i][j].m.toFixed(3)}
+                              {result.topsisResult.rawMatrix[i][j].toFixed(3)}
                             </td>
                           ))}
                         </tr>
@@ -397,19 +397,19 @@ export default function HybridFuzzyATPResultsDisplay({
                   </ol>
                 </div>
                 <div>
-                  <h5 className="font-bold text-gray-900 mb-2">Phase 2: Fuzzy TOPSIS (Alternative Rankings)</h5>
+                  <h5 className="font-bold text-gray-900 mb-2">Phase 2: TOPSIS (Alternative Rankings)</h5>
                   <ol className="list-decimal list-inside space-y-1 text-xs">
                     <li>Performance data for alternatives was normalized</li>
-                    <li>Fuzzy AHP weights were applied to create weighted decision matrix</li>
-                    <li>Fuzzy ideal best (F⁺) and worst (F⁻) solutions were identified</li>
-                    <li>Separation distances were calculated using vertex method</li>
+                    <li>Normalized Fuzzy AHP weights were applied to create weighted decision matrix</li>
+                    <li>Ideal best (V+) and worst (V-) solutions were identified</li>
+                    <li>Euclidean separation distances were calculated</li>
                     <li>Closeness coefficient (d⁻ / (d⁺ + d⁻)) determined alternative rankings</li>
                   </ol>
                 </div>
                 <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mt-4">
                   <p className="text-xs font-semibold text-yellow-900">
                     ✓ This hybrid approach provides more robust decision-making by combining 
-                    the strengths of both fuzzy AHP (for weight determination) and fuzzy TOPSIS 
+                    the strengths of both fuzzy AHP (for weight determination) and TOPSIS 
                     (for alternative evaluation).
                   </p>
                 </div>

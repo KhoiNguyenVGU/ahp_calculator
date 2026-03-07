@@ -31,7 +31,7 @@ const AHP_STEPS = ['Define Problem', 'Compare Criteria', 'Compare Alternatives',
 const TOPSIS_STEPS = ['Enter Data', 'Set Weights', 'Results'];
 const FAHP_STEPS = ['Define Problem', 'Compare Criteria', 'Compare Alternatives', 'Results'];
 const FUZZY_TOPSIS_STEPS = ['Enter Data', 'Set Fuzzy Weights', 'Results'];
-const HYBRID_FUZZY_ATP_STEPS = ['Define Problem', 'Compare Criteria (Fuzzy AHP)', 'Enter Alternative Data (Fuzzy TOPSIS)', 'Results'];
+const HYBRID_FUZZY_ATP_STEPS = ['Define Problem', 'Compare Criteria (Fuzzy AHP)', 'Enter Alternative Data (TOPSIS)', 'Results'];
 
 export default function Home() {
   // Tab state
@@ -82,7 +82,7 @@ export default function Home() {
   ]);
   const [fuzzyTopsisResults, setFuzzyTopsisResults] = useState<FuzzyTOPSISResult | null>(null);
 
-  // Hybrid Fuzzy AHP-TOPSIS State
+  // Hybrid Fuzzy AHP + TOPSIS State
   const [hybridStep, setHybridStep] = useState(0);
   const [hybridGoal, setHybridGoal] = useState('');
   const [hybridCriteria, setHybridCriteria] = useState<string[]>(['', '']);
@@ -429,7 +429,7 @@ export default function Home() {
     setFuzzyTopsisResults(null);
   };
 
-  // Hybrid Fuzzy AHP-TOPSIS calculate
+  // Hybrid Fuzzy AHP + TOPSIS calculate
   const handleHybridCalculate = () => {
     const rawAlternativeMatrix = hybridAlternativeDataMatrix.map(row =>
       row.map(cell => parseFloat(cell))
@@ -528,7 +528,7 @@ export default function Home() {
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              Hybrid Fuzzy AHP-TOPSIS
+              Hybrid Fuzzy AHP + TOPSIS
             </button>
           </div>
         </div>
@@ -722,7 +722,7 @@ export default function Home() {
           </>
         )}
 
-        {/* Hybrid Fuzzy AHP-TOPSIS Tab Content */}
+        {/* Hybrid Fuzzy AHP + TOPSIS Tab Content */}
         {activeTab === 'hybrid-fuzzy-atp' && (
           <>
             <StepIndicator currentStep={hybridStep} steps={HYBRID_FUZZY_ATP_STEPS} />
@@ -795,7 +795,7 @@ export default function Home() {
             Fuzzy TOPSIS: Combines Fuzzy Logic with TOPSIS for uncertain decision making
           </p>
           <p>
-            Hybrid Fuzzy AHP-TOPSIS: Integrated approach combining Fuzzy AHP weights with Fuzzy TOPSIS ranking
+            Hybrid Fuzzy AHP + TOPSIS: Integrated approach combining Fuzzy AHP weights with TOPSIS ranking
           </p>
         </div>
       </div>

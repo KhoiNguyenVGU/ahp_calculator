@@ -71,7 +71,6 @@ export default function QuickScoringInput({
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span>{crit}</span>
-                    <span className="text-gray-500 cursor-help">ℹ️</span>
                   </div>
                   {showTooltip === `crit-${idx}` && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-900 text-white text-xs rounded py-2 px-3 w-max z-20 whitespace-normal">

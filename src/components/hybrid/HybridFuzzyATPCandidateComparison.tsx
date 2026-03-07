@@ -20,7 +20,7 @@ export default function CandidateComparison({
   const ranked = alternatives
     .map((alt, idx) => ({
       name: alt,
-      score: result.fuzzyTOPSISResult.performanceScores[idx],
+      score: result.topsisResult.performanceScores[idx],
       index: idx,
     }))
     .sort((a, b) => b.score - a.score);
@@ -69,11 +69,11 @@ export default function CandidateComparison({
               {/* Show criteria scores for this candidate */}
               <div className="space-y-2">
                 {criteria.map((crit, critIdx) => {
-                  const score = result.fuzzyTOPSISResult.fuzzyMatrix[candidate.index][critIdx].m;
+                  const score = result.topsisResult.rawMatrix[candidate.index][critIdx];
                   const maxScore = Math.max(
                     ...alternatives.map(
                       (_, altIdx) =>
-                        result.fuzzyTOPSISResult.fuzzyMatrix[altIdx][critIdx].m
+                        result.topsisResult.rawMatrix[altIdx][critIdx]
                     )
                   );
                   const percentage = (score / maxScore) * 100;
@@ -152,7 +152,7 @@ export default function CandidateComparison({
                     className="border border-gray-300 px-4 py-2 text-center"
                   >
                     <span className="font-semibold">
-                      {result.fuzzyTOPSISResult.fuzzyMatrix[candidate.index][critIdx].m.toFixed(1)}
+                      {result.topsisResult.rawMatrix[candidate.index][critIdx].toFixed(1)}
                     </span>
                   </td>
                 ))}
@@ -187,7 +187,7 @@ export default function CandidateComparison({
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="text-sm text-green-700 font-semibold mb-1">Score Range</p>
           <p className="text-lg font-bold text-green-900">
-            {(ranked[ranked.length - 1]?.score - ranked[0]?.score).toFixed(4)}
+            {(ranked[0]?.score - ranked[ranked.length - 1]?.score).toFixed(4)}
           </p>
           <p className="text-xs text-green-600 mt-2">
             Highest - Lowest

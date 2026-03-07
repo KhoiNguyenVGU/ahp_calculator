@@ -52,7 +52,7 @@ export default function HybridFuzzyATPAlternativeData({
   return (
     <div className="card max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">
-        Fuzzy TOPSIS Phase - Enter Candidate Performance Data
+        TOPSIS Phase - Enter Candidate Performance Data
       </h2>
       <p className="text-gray-600 mb-6">
         Score each candidate on each evaluation criterion. 

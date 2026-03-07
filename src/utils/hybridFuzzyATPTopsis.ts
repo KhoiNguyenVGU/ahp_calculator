@@ -1,6 +1,6 @@
-// Hybrid Fuzzy AHP-TOPSIS Calculation Utilities
-import { TFN, ConfidenceKey, calculateWeightsFromFuzzyMatrix, buildFuzzyMatrix, defuzzify } from './fahp';
-import { calculateFuzzyTOPSIS, FuzzyTOPSISResult } from './fuzzyTopsis';
+// Hybrid Fuzzy AHP + TOPSIS Calculation Utilities
+import { TFN, ConfidenceKey, calculateWeightsFromFuzzyMatrix, buildFuzzyMatrix } from './fahp';
+import { calculateTOPSIS, TOPSISResult } from './topsis';
 
 export interface HybridFuzzyATPTopsisResult {
   // From Fuzzy AHP phase
@@ -9,8 +9,8 @@ export interface HybridFuzzyATPTopsisResult {
   crispAHPWeights: number[];
   normalizedAHPWeights: number[];
   
-  // From Fuzzy TOPSIS phase
-  fuzzyTOPSISResult: FuzzyTOPSISResult;
+  // From TOPSIS phase
+  topsisResult: TOPSISResult;
   
   // Combined ranking
   finalRankings: number[];
@@ -25,9 +25,9 @@ export interface HybridFuzzyATPTopsisResult {
 }
 
 /**
- * Calculate Hybrid Fuzzy AHP-TOPSIS
+ * Calculate Hybrid Fuzzy AHP + TOPSIS
  * Step 1: Use Fuzzy AHP to determine criterion weights
- * Step 2: Use those weights in Fuzzy TOPSIS to rank alternatives
+ * Step 2: Use crisp normalized AHP weights in TOPSIS to rank alternatives
  */
 export function calculateHybridFuzzyATPTopsis(
   criteriaMatrix: string[][],
@@ -45,12 +45,11 @@ export function calculateHybridFuzzyATPTopsis(
   // Calculate weights from the fuzzy matrix
   const ahpWeights = calculateWeightsFromFuzzyMatrix(fuzzyCriteriaMatrix);
   
-  // === PHASE 2: Fuzzy TOPSIS - Rank Alternatives ===
-  
-  // Use the fuzzy weights from Fuzzy AHP in Fuzzy TOPSIS
-  const fuzzyTOPSISResult = calculateFuzzyTOPSIS(
+  // === PHASE 2: TOPSIS - Rank Alternatives ===
+  // Use normalized crisp weights derived from Fuzzy AHP.
+  const topsisResult = calculateTOPSIS(
     alternativeDataMatrix,
-    ahpWeights.fuzzyWeights, // Use fuzzy weights from AHP
+    ahpWeights.normalizedWeights,
     criteriaTypes
   );
   
@@ -59,10 +58,10 @@ export function calculateHybridFuzzyATPTopsis(
     .fill(null)
     .map((_, index) => ({
       name: `Alternative ${index + 1}`,
-      rank: fuzzyTOPSISResult.rankings[index],
-      score: fuzzyTOPSISResult.performanceScores[index],
-      distanceToBest: fuzzyTOPSISResult.crispDistanceFromBest[index],
-      distanceToWorst: fuzzyTOPSISResult.crispDistanceFromWorst[index],
+      rank: topsisResult.rankings[index],
+      score: topsisResult.performanceScores[index],
+      distanceToBest: topsisResult.distanceFromBest[index],
+      distanceToWorst: topsisResult.distanceFromWorst[index],
     }))
     .sort((a, b) => a.rank - b.rank);
   
@@ -73,12 +72,12 @@ export function calculateHybridFuzzyATPTopsis(
     crispAHPWeights: ahpWeights.crispWeights,
     normalizedAHPWeights: ahpWeights.normalizedWeights,
     
-    // Fuzzy TOPSIS outputs
-    fuzzyTOPSISResult,
+    // TOPSIS outputs
+    topsisResult,
     
     // Combined results
-    finalRankings: fuzzyTOPSISResult.rankings,
-    finalScores: fuzzyTOPSISResult.performanceScores,
+    finalRankings: topsisResult.rankings,
+    finalScores: topsisResult.performanceScores,
     alternativeDetails,
   };
 }
